@@ -8,22 +8,22 @@
 :root {
   --bg:#F5F6F8; --surface:#FFFFFF; --ink:#1E2733; --muted:#5C6B7A; --line:#DCE1E8;
   --accent:#365CAA; --accent-soft:#E4EAF6; --der:#C1501A; --der-soft:#FBE6D9; --zebra:#EEF1F5;
-  --track:#8E9CAD; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
+  --track:#8E9CAD; --bar:#365CAA; --mote-op:.08; --good:#1BB24B; --warn:#F36C21;
 }
 @media (prefers-color-scheme: dark) { :root {
   --bg:#10151C; --surface:#171F29; --ink:#D8DEE6; --muted:#8493A6; --line:#28323F;
   --accent:#7C9FE0; --accent-soft:#1E2A3D; --der:#F0955A; --der-soft:#3A2415; --zebra:#141B24;
-  --track:#3A4959; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
+  --track:#3A4959; --bar:#365CAA; --mote-op:.14; --good:#1BB24B; --warn:#F36C21;
 } }
 :root[data-theme="dark"] {
   --bg:#10151C; --surface:#171F29; --ink:#D8DEE6; --muted:#8493A6; --line:#28323F;
   --accent:#7C9FE0; --accent-soft:#1E2A3D; --der:#F0955A; --der-soft:#3A2415; --zebra:#141B24;
-  --track:#3A4959; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
+  --track:#3A4959; --bar:#365CAA; --mote-op:.14; --good:#1BB24B; --warn:#F36C21;
 }
 :root[data-theme="light"] {
   --bg:#F5F6F8; --surface:#FFFFFF; --ink:#1E2733; --muted:#5C6B7A; --line:#DCE1E8;
   --accent:#365CAA; --accent-soft:#E4EAF6; --der:#C1501A; --der-soft:#FBE6D9; --zebra:#EEF1F5;
-  --track:#8E9CAD; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
+  --track:#8E9CAD; --bar:#365CAA; --mote-op:.08; --good:#1BB24B; --warn:#F36C21;
 }
 * { box-sizing:border-box }
 .brandbar { display:flex; align-items:center; gap:13px; margin-bottom:14px }
@@ -131,11 +131,11 @@ td.desc { min-width:220px; max-width:420px }
 /* ===== v6: cabecalho + filtro + shell lateral + navegacao por ano ===== */
 .hero { padding:16px clamp(16px,3vw,40px) 8px; position:sticky; top:0; z-index:30; background:color-mix(in srgb, #365CAA 90%, transparent); backdrop-filter:blur(2px); overflow:hidden; border-bottom:1px solid var(--line); color:#fff; display:flex; flex-direction:column; justify-content:center }
 .hero .brandwords .be, .hero .brandwords .bn, .hero h1 { color:#fff }
-.mote-right { position:fixed; top:0; right:calc(-40px - 1cm); width:280px; height:auto; opacity:.08; pointer-events:none; z-index:0 }
-.mote-left { position:fixed; top:calc(50% + 190px); left:-138px; width:480px; height:auto; opacity:.08; pointer-events:none; z-index:0;
+.mote-right { position:fixed; top:0; right:calc(-40px - 1cm); width:280px; height:auto; opacity:var(--mote-op,.08); pointer-events:none; z-index:0 }
+.mote-left { position:fixed; top:calc(50% + 190px); left:-138px; width:480px; height:auto; opacity:var(--mote-op,.08); pointer-events:none; z-index:0;
   transform:translateY(-50%) rotate(90deg) }
-.mote-corner { position:fixed; right:-.5cm; bottom:-.5cm; width:460px; height:auto; opacity:.08; pointer-events:none; z-index:0 }
-.mote-slogan { position:fixed; top:calc(var(--hero-h, 126px) - 10px); left:1236px; opacity:.08; pointer-events:none; z-index:0; line-height:.88; white-space:nowrap }
+.mote-corner { position:fixed; right:-.5cm; bottom:-.5cm; width:460px; height:auto; opacity:var(--mote-op,.08); pointer-events:none; z-index:0 }
+.mote-slogan { position:fixed; top:calc(var(--hero-h, 126px) - 10px); left:1236px; opacity:var(--mote-op,.08); pointer-events:none; z-index:0; line-height:.88; white-space:nowrap }
 .mote-slogan span { display:block; font-weight:800; letter-spacing:-.02em; font-family:'Parkinsans',system-ui,sans-serif }
 .mote-slogan .wm-1 { font-size:14.4rem; color:#365CAA; transform:translate(-1cm,-.5cm) }
 .mote-slogan .wm-2 { font-size:8.2875rem; color:#F36C21; transform:translate(6cm,-1cm) }
