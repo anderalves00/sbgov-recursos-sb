@@ -8,22 +8,22 @@
 :root {
   --bg:#F5F6F8; --surface:#FFFFFF; --ink:#1E2733; --muted:#5C6B7A; --line:#DCE1E8;
   --accent:#365CAA; --accent-soft:#E4EAF6; --der:#C1501A; --der-soft:#FBE6D9; --zebra:#EEF1F5;
-  --track:#D5DCE4; --bar:#365CAA; --good:#0E8235; --warn:#C1501A;
+  --track:#D5DCE4; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
 }
 @media (prefers-color-scheme: dark) { :root {
   --bg:#10151C; --surface:#171F29; --ink:#D8DEE6; --muted:#8493A6; --line:#28323F;
   --accent:#7C9FE0; --accent-soft:#1E2A3D; --der:#F0955A; --der-soft:#3A2415; --zebra:#141B24;
-  --track:#232E3B; --bar:#3F6ABE; --good:#0E8235; --warn:#C1501A;
+  --track:#232E3B; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
 } }
 :root[data-theme="dark"] {
   --bg:#10151C; --surface:#171F29; --ink:#D8DEE6; --muted:#8493A6; --line:#28323F;
   --accent:#7C9FE0; --accent-soft:#1E2A3D; --der:#F0955A; --der-soft:#3A2415; --zebra:#141B24;
-  --track:#232E3B; --bar:#3F6ABE; --good:#0E8235; --warn:#C1501A;
+  --track:#232E3B; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
 }
 :root[data-theme="light"] {
   --bg:#F5F6F8; --surface:#FFFFFF; --ink:#1E2733; --muted:#5C6B7A; --line:#DCE1E8;
   --accent:#365CAA; --accent-soft:#E4EAF6; --der:#C1501A; --der-soft:#FBE6D9; --zebra:#EEF1F5;
-  --track:#D5DCE4; --bar:#365CAA; --good:#0E8235; --warn:#C1501A;
+  --track:#D5DCE4; --bar:#365CAA; --good:#1BB24B; --warn:#F36C21;
 }
 * { box-sizing:border-box }
 .brandbar { display:flex; align-items:center; gap:13px; margin-bottom:14px }
@@ -159,8 +159,9 @@ td.desc { min-width:220px; max-width:420px }
 .kpi span { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; opacity:.9 }
 .kpi b { font-size:1.24rem; font-variant-numeric:tabular-nums }
 .kpi-pact { background:var(--bar) }
-.kpi-exec { background:var(--good) }
-.kpi-pend { background:var(--warn) }
+.kpi-exec { background:var(--good); color:#12202C }
+.kpi-pend { background:var(--warn); color:#12202C }
+.kpi-exec span, .kpi-pend span { opacity:1 }
 .chartcard { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:15px }
 .chartcard h2 { margin:0 0 10px; font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700 }
 .barchart .brow { display:grid; grid-template-columns:1fr auto; align-items:center; gap:7px; margin:7px 0; font-size:.72rem }
@@ -171,6 +172,9 @@ td.desc { min-width:220px; max-width:420px }
 .barchart .bname { position:absolute; left:6px; top:0; height:100%; display:flex; align-items:center; max-width:calc(100% - 12px);
   color:#fff; font-size:.68rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none;
   text-shadow:0 1px 2px rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.8) }
+/* verde e laranja sao claros demais para texto branco - rotulo vira quase-preto */
+.barchart .bfill-good + .bname, .barchart .bfill-warn + .bname {
+  color:#12202C; text-shadow:0 1px 1px rgba(255,255,255,.45) }
 .barchart .bname.bname-out { color:var(--ink); text-shadow:none; font-weight:700 }
 .barchart .bval { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.68rem; white-space:nowrap }
 .wordmark-wrap { padding:18px 6px 4px; opacity:.85 }
