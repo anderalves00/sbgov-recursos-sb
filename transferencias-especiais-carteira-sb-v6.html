@@ -147,6 +147,11 @@ td.desc { min-width:220px; max-width:420px }
 .mainsticky { position:sticky; top:calc(var(--hero-h, 126px) + 16px); z-index:20 }
 .brandbar .brandwords .be { display:block; font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:700 }
 .brandbar .brandwords .bn { display:block; font-size:1.15rem; font-weight:800; color:var(--ink); letter-spacing:-.01em }
+/* O cabecalho e azul nos dois temas, entao o logotipo nao acompanha o tema:
+   no claro o brasao herdava #365CAA e sumia no proprio fundo. */
+.hero .brandbar .crest { color:#FFFFFF }
+.hero .brandbar .brandwords .be { color:rgba(255,255,255,.82) }
+.hero .brandbar .brandwords .bn { color:#FFFFFF }
 
 .shell { display:grid; grid-template-columns:300px minmax(0,1fr); gap:30px; max-width:none; margin:0;
   padding:8px clamp(16px,3vw,40px) 80px; align-items:start; position:relative; z-index:1 }
@@ -171,7 +176,7 @@ td.desc { min-width:220px; max-width:420px }
 .barchart .bname { position:absolute; left:6px; top:0; height:100%; display:flex; align-items:center; max-width:calc(100% - 12px);
   color:#fff; font-size:.68rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none;
   text-shadow:0 1px 2px rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.8) }
-.barchart .bval { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.68rem; white-space:nowrap }
+.barchart .bval { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.68rem; white-space:nowrap; text-align:right }
 .wordmark-wrap { padding:18px 6px 4px; opacity:.85 }
 .wordmark-img { display:block; width:100%; height:auto }
 
@@ -911,5 +916,34 @@ const q = document.getElementById('q');
   pinta();
 })();
 
+/* Cada .brow e um grid independente, entao a coluna de valores tem largura
+   propria por linha e as trilhas terminam desalinhadas. Aqui a maior largura
+   de cada grafico vira minimo das demais - por grafico, nao entre eles. */
+(function(){
+  var graficos = ['barchart','baryear','barexec'].map(function(id){
+    return document.getElementById(id);
+  }).filter(Boolean);
+  if (!graficos.length) return;
+
+  function alinha(){
+    graficos.forEach(function(g){
+      var vals = g.querySelectorAll('.bval');
+      if (!vals.length) return;
+      var maior = 0;
+      vals.forEach(function(v){ v.style.minWidth = ''; });
+      vals.forEach(function(v){
+        var w = v.getBoundingClientRect().width;
+        if (w > maior) maior = w;
+      });
+      vals.forEach(function(v){ v.style.minWidth = Math.ceil(maior) + 'px'; });
+    });
+  }
+
+  var obs = new MutationObserver(alinha);
+  graficos.forEach(function(g){ obs.observe(g, { childList: true }); });
+  window.addEventListener('resize', alinha);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(alinha);
+  alinha();
+})();
 </script>
 </body></html>
