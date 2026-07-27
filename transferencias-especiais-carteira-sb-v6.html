@@ -159,9 +159,8 @@ td.desc { min-width:220px; max-width:420px }
 .kpi span { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; opacity:.9 }
 .kpi b { font-size:1.24rem; font-variant-numeric:tabular-nums }
 .kpi-pact { background:var(--bar) }
-.kpi-exec { background:var(--good); color:#12202C }
-.kpi-pend { background:var(--warn); color:#12202C }
-.kpi-exec span, .kpi-pend span { opacity:1 }
+.kpi-exec { background:var(--good) }
+.kpi-pend { background:var(--warn) }
 .chartcard { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:15px }
 .chartcard h2 { margin:0 0 10px; font-size:.76rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:700 }
 .barchart .brow { display:grid; grid-template-columns:1fr auto; align-items:center; gap:7px; margin:7px 0; font-size:.72rem }
@@ -172,10 +171,6 @@ td.desc { min-width:220px; max-width:420px }
 .barchart .bname { position:absolute; left:6px; top:0; height:100%; display:flex; align-items:center; max-width:calc(100% - 12px);
   color:#fff; font-size:.68rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none;
   text-shadow:0 1px 2px rgba(0,0,0,.85), 0 0 3px rgba(0,0,0,.8) }
-/* verde e laranja sao claros demais para texto branco - rotulo vira quase-preto */
-.barchart .bfill-good + .bname, .barchart .bfill-warn + .bname {
-  color:#12202C; text-shadow:0 1px 1px rgba(255,255,255,.45) }
-.barchart .bname.bname-out { color:var(--ink); text-shadow:none; font-weight:700 }
 .barchart .bval { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.68rem; white-space:nowrap }
 .wordmark-wrap { padding:18px 6px 4px; opacity:.85 }
 .wordmark-img { display:block; width:100%; height:auto }
@@ -916,45 +911,5 @@ const q = document.getElementById('q');
   pinta();
 })();
 
-/* Rotulo que nao cabe dentro do preenchimento vai para fora da barra, na cor
-   do texto normal - dentro da trilha clara o branco fica ilegivel. */
-(function(){
-  var graficos = ['barchart','baryear','barexec'].map(function(id){
-    return document.getElementById(id);
-  }).filter(Boolean);
-  if (!graficos.length) return;
-  var ajustando = false;
-
-  function ajusta(){
-    if (ajustando) return;
-    ajustando = true;
-    graficos.forEach(function(g){
-      g.querySelectorAll('.brow').forEach(function(row){
-        var nome = row.querySelector('.bname'),
-            fill = row.querySelector('.bfill'),
-            trilha = row.querySelector('.btrack');
-        if (!nome || !fill || !trilha) return;
-        nome.classList.remove('bname-out');
-        nome.style.left = ''; nome.style.maxWidth = '';
-        var larguraTexto = nome.scrollWidth,
-            larguraFill = fill.getBoundingClientRect().width,
-            larguraTrilha = trilha.getBoundingClientRect().width;
-        if (larguraTexto > larguraFill - 12) {
-          var esquerda = larguraFill + 6;
-          nome.classList.add('bname-out');
-          nome.style.left = esquerda + 'px';
-          nome.style.maxWidth = Math.max(0, larguraTrilha - esquerda - 4) + 'px';
-        }
-      });
-    });
-    ajustando = false;
-  }
-
-  var obs = new MutationObserver(ajusta);
-  graficos.forEach(function(g){ obs.observe(g, { childList: true }); });
-  window.addEventListener('resize', ajusta);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajusta);
-  ajusta();
-})();
 </script>
 </body></html>
