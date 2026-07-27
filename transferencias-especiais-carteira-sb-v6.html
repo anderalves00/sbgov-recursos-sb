@@ -206,7 +206,18 @@ td.desc { min-width:220px; max-width:420px }
 .secwrap { grid-column:2; min-width:0 }
 .f.wide { width:100% }
 @media (max-width:640px) { .pabody { grid-template-columns:1fr } .pabody > dl.grid3 { grid-column:1 } .obj, .secwrap { grid-column:1 } }
+.themetoggle { appearance:none; font:inherit; font-size:.72rem; font-weight:700; letter-spacing:.03em;
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap; cursor:pointer; padding:7px 13px;
+  border-radius:999px; color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.38) }
+.themetoggle:hover { background:rgba(255,255,255,.26) }
+.themetoggle:focus-visible { outline:2px solid #fff; outline-offset:2px }
+.themetoggle .ticon { font-size:.9rem; line-height:1 }
+@media print { .themetoggle { display:none } }
 </style>
+<script>
+(function(){var t;try{t=localStorage.getItem('sbgov-tema')}catch(e){}
+if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+</script>
 </head>
 <body>
 
@@ -218,6 +229,7 @@ td.desc { min-width:220px; max-width:420px }
 <span class="mote-slogan" aria-hidden="true"><span class="wm-1">Cidade</span><span class="wm-2">pra frente</span></span>
 <div class="hero">
   <div class="brandbar">
+    <button type="button" id="themeBtn" class="themetoggle"><span class="ticon" aria-hidden="true">☀</span><span class="tlabel">Tema claro</span></button>
     <svg class="crest" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="560 236 242 302">
 <defs>
 <clipPath id="clip-0">
@@ -870,6 +882,27 @@ const q = document.getElementById('q');
       '<span class="lbl">' + pct + '% executado</span>';
     parlP.insertAdjacentElement('afterend', bar);
   });
+})();
+</script>
+<script>
+(function(){
+  var root = document.documentElement, btn = document.getElementById('themeBtn');
+  if (!btn) return;
+  var icon = btn.querySelector('.ticon'), label = btn.querySelector('.tlabel');
+  function pinta(){
+    var claro = root.getAttribute('data-theme') === 'light';
+    icon.textContent = claro ? '☾' : '☀';
+    label.textContent = claro ? 'Tema escuro' : 'Tema claro';
+    btn.setAttribute('aria-label', label.textContent);
+    btn.setAttribute('title', label.textContent);
+  }
+  btn.addEventListener('click', function(){
+    var novo = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', novo);
+    try { localStorage.setItem('sbgov-tema', novo); } catch(e){}
+    pinta();
+  });
+  pinta();
 })();
 </script>
 </body></html>
