@@ -1,0 +1,737 @@
+<meta charset="utf-8">
+<title>SBGov · Estrutura — Base Sem Papel</title>
+<style>
+  :root{
+    --bg:#F6F7F5; --surface:#FFFFFF; --ink:#223032; --muted:#5F6F6D; --border:#DDE4E1;
+    --accent:#0E7C6B; --accent-fill:#E3F0EC; --amber:#A87721; --finance:#3B6FA6;
+    --chip-num-bg:#EAE3D2; --chip-num-ink:#6B5416;
+    --chip-date-bg:#DCE9E6; --chip-date-ink:#0B5D51;
+    --chip-text-bg:#ECEFED; --chip-text-ink:#5F6F6D;
+    --flag-bg:#F9DEDC; --flag-ink:#B3261E;
+    --note-bg:#EDE3F0; --note-ink:#6B3F82;
+    --mono: ui-monospace,"Cascadia Code",Consolas,monospace;
+    --sans: system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#161C1B; --surface:#1E2625; --ink:#E7ECE9; --muted:#96A5A2; --border:#303A38;
+      --accent:#46B49C; --accent-fill:#1D3430; --amber:#D9A653; --finance:#7AA7DE;
+      --chip-num-bg:#3A331F; --chip-num-ink:#E4C77E;
+      --chip-date-bg:#1B3330; --chip-date-ink:#7FD3C2;
+      --chip-text-bg:#2A3231; --chip-text-ink:#AEBAB7;
+      --flag-bg:#3B2222; --flag-ink:#F5A8A2;
+      --note-bg:#2E2536; --note-ink:#CBA6E0;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#161C1B; --surface:#1E2625; --ink:#E7ECE9; --muted:#96A5A2; --border:#303A38;
+    --accent:#46B49C; --accent-fill:#1D3430; --amber:#D9A653; --finance:#7AA7DE;
+    --chip-num-bg:#3A331F; --chip-num-ink:#E4C77E;
+    --chip-date-bg:#1B3330; --chip-date-ink:#7FD3C2;
+    --chip-text-bg:#2A3231; --chip-text-ink:#AEBAB7;
+    --flag-bg:#3B2222; --flag-ink:#F5A8A2;
+    --note-bg:#2E2536; --note-ink:#CBA6E0;
+  }
+  :root[data-theme="light"]{
+    --bg:#F6F7F5; --surface:#FFFFFF; --ink:#223032; --muted:#5F6F6D; --border:#DDE4E1;
+    --accent:#0E7C6B; --accent-fill:#E3F0EC; --amber:#A87721; --finance:#3B6FA6;
+    --chip-num-bg:#EAE3D2; --chip-num-ink:#6B5416;
+    --chip-date-bg:#DCE9E6; --chip-date-ink:#0B5D51;
+    --chip-text-bg:#ECEFED; --chip-text-ink:#5F6F6D;
+    --flag-bg:#F9DEDC; --flag-ink:#B3261E;
+    --note-bg:#EDE3F0; --note-ink:#6B3F82;
+  }
+  *{box-sizing:border-box}
+  body{margin:0}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .page{background:var(--bg); color:var(--ink); font-family:var(--sans); line-height:1.5; min-height:100vh; padding:40px clamp(16px,3vw,48px) 80px}
+  .wrap{max-width:1900px; margin:0 auto}
+  .wrap-wide{max-width:1900px; margin:0 auto}
+  .prose{max-width:840px}
+  .eyebrow{font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent)}
+  h1{font-size:2rem; line-height:1.15; letter-spacing:-.02em; margin:.4em 0 .5em; text-wrap:balance}
+  .sub{color:var(--muted); max-width:840px; font-size:.98rem}
+  .sub b{color:var(--ink)}
+  code, .mono{font-family:var(--mono); overflow-wrap:break-word}
+
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,190px)); justify-content:start; gap:12px; margin:28px 0}
+  .stat{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px}
+  .stat b{display:block; font-size:1.5rem; font-variant-numeric:tabular-nums}
+  .stat span{color:var(--muted); font-size:.78rem}
+
+  .toolbar{display:flex; gap:10px; align-items:center; margin:8px 0 28px; flex-wrap:wrap}
+  .search{flex:1; min-width:240px; padding:12px 14px; border:1px solid var(--border); border-radius:10px;
+    background:var(--surface); color:var(--ink); font:inherit; font-size:.95rem}
+  .search:focus{outline:2px solid var(--accent); outline-offset:1px}
+  .btn{padding:10px 14px; border:1px solid var(--border); border-radius:10px; background:var(--surface); color:var(--ink);
+    font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; white-space:nowrap}
+  .btn:hover{border-color:var(--accent); color:var(--accent)}
+
+  /* ---------- Diagrama unificado ---------- */
+  .diagram-panel{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px clamp(10px,2vw,28px); margin-bottom:16px}
+  .diagram-panel h3{margin:0 0 4px; font-size:1.05rem}
+  .diagram-panel p{color:var(--muted); font-size:.85rem; margin:0 0 6px; max-width:780px}
+  .diagram-scroll{overflow-x:auto; padding-top:6px}
+  #diagram-grid{position:relative; display:grid; grid-template-columns:repeat(4,minmax(170px,1fr)); grid-auto-rows:minmax(46px,auto); column-gap:40px; row-gap:16px; min-width:760px; padding:10px 4px 24px}
+  #diagram-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
+  #diagram-svg path{fill:none; stroke-width:1.6}
+  .edge-estrut{stroke:var(--accent)}
+  .edge-widget{stroke:var(--amber)}
+  .edge-doc{stroke:var(--finance)}
+  .edge-vinculo{stroke:var(--muted); stroke-dasharray:3 4}
+  .edge-implied{stroke-dasharray:5 5}
+
+  .node{position:relative; align-self:center; justify-self:start; width:100%; max-width:230px; background:var(--surface); border:1.5px solid var(--border);
+    border-radius:8px; padding:8px 10px; font-family:var(--mono); font-size:.78rem; line-height:1.3; font-weight:700;
+    color:var(--ink); text-align:center; cursor:pointer; z-index:2; transition:border-color .12s, box-shadow .12s, transform .12s;
+    word-break:break-word}
+  .node:hover, .node:focus-visible{border-color:var(--accent); box-shadow:0 2px 10px rgba(14,124,107,.18); transform:translateY(-1px)}
+  .node.hub{background:var(--accent-fill); border-color:var(--accent); color:var(--accent); font-size:.9rem; padding:12px 14px; box-shadow:0 2px 14px rgba(14,124,107,.15)}
+  .node .n-count{display:block; font-weight:400; font-size:.8em; color:var(--muted); margin-top:3px}
+  .node-badges{position:absolute; top:-6px; right:-6px; display:flex; gap:3px; z-index:3}
+  .nb-flag, .nb-note{width:12px; height:12px; border-radius:50%; border:2px solid var(--bg)}
+  .nb-flag{background:var(--flag-ink)}
+  .nb-note{background:var(--note-ink)}
+  .band-div{grid-column:1/-1; display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.7rem;
+    font-weight:700; letter-spacing:.05em; text-transform:uppercase; align-self:center}
+  .band-div::before, .band-div::after{content:''; height:1px; background:var(--border); flex:1}
+  .node.hub .n-count{color:var(--accent)}
+  .node.flash{animation:flashnode 1.1s ease}
+  @keyframes flashnode{0%,100%{box-shadow:0 0 0 0 transparent}30%{box-shadow:0 0 0 5px var(--accent-fill)}}
+
+  .tooltip{position:fixed; z-index:50; max-width:300px; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:12px 14px; box-shadow:0 8px 28px rgba(0,0,0,.18); font-size:.78rem; pointer-events:none;
+    opacity:0; transform:translateY(4px); transition:opacity .1s, transform .1s}
+  .tooltip.show{opacity:1; transform:translateY(0)}
+  .tooltip .tt-name{font-family:var(--mono); font-weight:700; color:var(--accent); margin-bottom:4px; font-size:.82rem}
+  .tooltip .tt-desc{color:var(--ink); font-style:italic; margin-bottom:8px}
+  .tooltip .tt-cols{color:var(--muted); font-family:var(--mono); font-size:.7rem; line-height:1.5}
+
+  .legend{display:flex; flex-wrap:wrap; gap:12px 26px; font-size:.86rem; color:var(--muted); margin:14px 0 32px; padding-top:14px; border-top:1px solid var(--border)}
+  .legend span{display:inline-flex; align-items:center; gap:8px}
+  .lg-line{width:32px; height:0; border-top:3px solid}
+  .lg-line.dash{border-top-style:dashed}
+  .dot{width:11px; height:11px; border-radius:50%; display:inline-block}
+
+  /* ---------- Grupos recolhíveis ---------- */
+  details.group{margin-top:18px; border-top:1px solid var(--border)}
+  details.group summary{list-style:none; cursor:pointer; padding:16px 0; display:flex; align-items:center; gap:10px}
+  details.group summary::-webkit-details-marker{display:none}
+  details.group summary .tw{color:var(--accent); font-size:.8rem; transition:transform .15s; display:inline-block}
+  details.group[open] summary .tw{transform:rotate(90deg)}
+  details.group summary h2{font-size:1.05rem; margin:0}
+  details.group summary .grp-count{color:var(--muted); font-size:.78rem; font-weight:400}
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:14px; padding-bottom:8px}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 17px; transition:border-color .15s, box-shadow .15s; scroll-margin-top:20px; min-width:0; overflow-wrap:break-word}
+  .card:hover{border-color:var(--accent)}
+  .card.flash{animation:flashcard 1.3s ease}
+  @keyframes flashcard{0%,100%{box-shadow:0 0 0 0 transparent}25%{box-shadow:0 0 0 4px var(--accent-fill)}}
+  .card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px}
+  .card-head .name{font-family:var(--mono); font-weight:700; font-size:.95rem}
+  .pill{font-size:.7rem; padding:2px 8px; border-radius:99px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .pill.count{background:var(--accent-fill); color:var(--accent); font-weight:600}
+  .desc-oficial{color:var(--ink); font-size:.83rem; font-style:italic; margin:0 0 4px; padding-left:10px; border-left:2px solid var(--border)}
+  .desc{color:var(--muted); font-size:.82rem; margin:0 0 10px}
+  .meta-row{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
+  .chip{font-family:var(--mono); font-size:.68rem; padding:2px 7px; border-radius:5px; font-weight:600; overflow-wrap:break-word}
+  .chip.origem{background:var(--chip-text-bg); color:var(--chip-text-ink)}
+  .flag{display:inline-flex; align-items:center; gap:4px; background:var(--flag-bg); color:var(--flag-ink); font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:99px}
+  .note{display:inline-flex; align-items:center; gap:4px; background:var(--note-bg); color:var(--note-ink); font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:99px}
+
+  details.cols summary{cursor:pointer; color:var(--accent); font-weight:700; font-size:.82rem; list-style:none}
+  details.cols summary::-webkit-details-marker{display:none}
+  details.cols summary::before{content:"▸ "; display:inline-block}
+  details.cols[open] summary::before{content:"▾ "}
+  .colwrap{max-height:420px; overflow-y:auto; margin-top:10px; border-top:1px solid var(--border); padding-top:4px}
+  .col-row{padding:8px 0; border-bottom:1px dashed var(--border); font-size:.8rem}
+  .col-row:last-child{border-bottom:none}
+  .col-line1{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .col-name{font-family:var(--mono); font-weight:600}
+  .col-name.null::after{content:" ?"; color:var(--muted); font-weight:400}
+  .tchip{font-family:var(--mono); font-size:.65rem; padding:1px 6px; border-radius:4px; font-weight:700; white-space:nowrap}
+  .tchip.num{background:var(--chip-num-bg); color:var(--chip-num-ink)}
+  .tchip.date{background:var(--chip-date-bg); color:var(--chip-date-ink)}
+  .tchip.text{background:var(--chip-text-bg); color:var(--chip-text-ink)}
+  .col-desc{color:var(--muted); margin-top:3px}
+  .col-ex{margin-top:2px}
+  .col-ex b{font-weight:600; color:var(--ink)}
+  .col-ex em{color:var(--muted); font-style:italic}
+
+  .rels{margin-top:10px; padding-top:8px; border-top:1px solid var(--border); font-size:.78rem}
+  .rel{padding:4px 0; display:flex; gap:6px; align-items:baseline; flex-wrap:wrap}
+  .rel .arrow.in{color:var(--accent); font-weight:700}
+  .rel .arrow.out{color:var(--amber); font-weight:700}
+  .rel .card-pill{font-size:.68rem; padding:1px 6px; border-radius:5px; background:var(--accent-fill); color:var(--accent); font-weight:700; cursor:pointer}
+
+  .achados{margin-top:10px; padding-top:8px; border-top:1px solid var(--border)}
+  .achados ul{margin:6px 0 0; padding-left:18px; font-size:.8rem; color:var(--muted)}
+  .achados li{margin-bottom:4px}
+  .achados li b{color:var(--ink)}
+
+  .hid{display:none !important}
+
+  footer{margin-top:60px; color:var(--muted); font-size:.78rem; border-top:1px solid var(--border); padding-top:16px; max-width:1200px; margin-left:auto; margin-right:auto}
+</style>
+
+<div class="page">
+<div class="wrap">
+  <div class="prose">
+  <div class="eyebrow">SBGov · Base Sem Papel · Modo Estrutura</div>
+  <h1>Estrutura da Carteira — Base Sem Papel<br>São Bernardo do Campo/SP</h1>
+  <p class="sub">Recursos estaduais via emenda parlamentar e programas próprios do Governo do Estado de São Paulo, geridos por <b>Demanda</b> na plataforma <code>demandas.spsempapel.sp.gov.br</code>. Sem API pública — todo dado vem de raspagem de sessão logada (login vinculado exclusivamente ao município, sem coluna de CNPJ). Diferente da Base Especiais (schema relacional de 20 tabelas), aqui <b>1 única entidade</b> concentra dado aninhado em 3 camadas de profundidade crescente: campos-resumo (Nível 1), seções em acordeão (Nível 2, ~414 tipos distintos) e documentos PDF selecionados (Fase 2). O mapa abaixo usa <b>Demanda como hub</b> e cada categoria de dado como satélite, no lugar de tabelas relacionais.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>265</b><span>demandas (de 267 — 2 inacessíveis)</span></div>
+    <div class="stat"><b>5.248</b><span>seções no Nível 2</span></div>
+    <div class="stat"><b>414</b><span>títulos de seção distintos</span></div>
+    <div class="stat"><b>245</b><span>documentos PDF extraídos (Fase 2)</span></div>
+    <div class="stat"><b>22</b><span>combinações de campo no Nível 1</span></div>
+  </div>
+</div>
+
+<div class="wrap-wide">
+  <div class="diagram-panel">
+    <h3>Mapa único da base — Demanda como hub, 16 categorias de dado satélite</h3>
+    <p>Tudo nasce na <b>Demanda</b> (o hub, centro do mapa) — não há tabelas relacionais separadas, então cada satélite aqui é uma <b>categoria de dado</b> encontrada dentro dela: seções estruturadas do Nível 2 (verde), widgets fora do sistema de painéis (âmbar), documentos (azul) e o vínculo Principal↔Aditamento (tracejado, é um campo de texto cruzado, não uma FK). Passe o mouse num nó para ver a descrição e os campos; clique para abrir o card completo.</p>
+    <div class="diagram-scroll">
+      <div id="diagram-grid">
+        <svg id="diagram-svg"><g id="edges-g"></g></svg>
+
+        <div class="band-div" style="grid-row:1">Nível 2 — dado estruturado</div>
+        <div class="node" id="n-dados_bancarios" style="grid-column:2; grid-row:2" tabindex="0">Dados Bancários<span class="n-count">76 seç. · 81 dem.</span></div>
+        <div class="node" id="n-itens_pt" style="grid-column:3; grid-row:2" tabindex="0">Itens da Demanda / Doc. do PT<span class="n-count">57+6 seç.</span></div>
+        <div class="node" id="n-cronograma" style="grid-column:2; grid-row:3" tabindex="0">Cronograma de Desembolso<span class="n-count">4 seç. · raro</span></div>
+        <div class="node" id="n-licitacao_contrato" style="grid-column:3; grid-row:3" tabindex="0"><span class="node-badges"><span class="nb-flag" title="achado de qualidade de dado"></span></span>Licitação &amp; Contrato<span class="n-count">71 seç. cada · 37 dem.</span></div>
+        <div class="node" id="n-equipe_tecnica" style="grid-column:4; grid-row:2" tabindex="0">Equipe Técnica<span class="n-count">47 seç. · 28 dem.</span></div>
+        <div class="node" id="n-processo_siafem" style="grid-column:4; grid-row:3" tabindex="0">Processo SIAFEM<span class="n-count">53 seç. · 55 dem.</span></div>
+        <div class="node" id="n-emenda_loa_desv" style="grid-column:2; grid-row:4" tabindex="0">Dados da Emenda LOA Desvinculada<span class="n-count">8 seç. · bloco estático</span></div>
+        <div class="node" id="n-parcela_n" style="grid-column:3; grid-row:4" tabindex="0"><span class="node-badges"><span class="nb-flag" title="achado de qualidade de dado"></span></span>Parcela N (container)<span class="n-count">44 seç. · 23 dem.</span></div>
+
+        <div class="band-div" style="grid-row:5">Widgets (fora do sistema de painéis)</div>
+        <div class="node" id="n-dados_emenda_modal" style="grid-column:2; grid-row:6" tabindex="0">Dados da Emenda (modal)<span class="n-count">116 dem.</span></div>
+        <div class="node" id="n-pagamentos" style="grid-column:3; grid-row:6" tabindex="0">Pagamento(s)<span class="n-count">33 dem.</span></div>
+        <div class="node" id="n-emendas_unitarias" style="grid-column:4; grid-row:6" tabindex="0">Emendas Unitárias<span class="n-count">5 dem.</span></div>
+
+        <div class="node hub" id="n-demanda" style="grid-column:1; grid-row:7" tabindex="0"><span class="node-badges"><span class="nb-flag" title="achado de qualidade de dado"></span></span>Demanda<span class="n-count">265 dem. · HUB</span></div>
+        <div class="node" id="n-anexos" style="grid-column:2; grid-row:8" tabindex="0">Arquivo(s) anexado(s)<span class="n-count">265 dem. · 223 c/ anexo</span></div>
+        <div class="node" id="n-avisos" style="grid-column:3; grid-row:8" tabindex="0">Avisos<span class="n-count">126 dem. · 11 tipos</span></div>
+
+        <div class="band-div" style="grid-row:9">Vínculo Principal ↔ Aditamento</div>
+        <div class="node" id="n-aditamento" style="grid-column:2; grid-row:10" tabindex="0"><span class="node-badges"><span class="nb-flag" title="achado de qualidade de dado"></span></span>Aditamento(s)<span class="n-count">31 de 265</span></div>
+
+        <div class="band-div" style="grid-row:11">Documentos</div>
+        <div class="node" id="n-secoes_pdf" style="grid-column:2; grid-row:12" tabindex="0"><span class="node-badges"><span class="nb-note" title="pendência / limitação de dado"></span></span>Seções tipo PDF (catálogo)<span class="n-count">2.239 seç. · 311 títulos</span></div>
+        <div class="node" id="n-fase2" style="grid-column:3; grid-row:12" tabindex="0">Fase 2 — Documentos extraídos<span class="n-count">245 docs · 7 tipos</span></div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><span class="lg-line" style="border-color:var(--accent)"></span> Nível 2 — dado estruturado</span>
+      <span><span class="lg-line" style="border-color:var(--amber)"></span> widgets (fora do sistema de painéis)</span>
+      <span><span class="lg-line" style="border-color:var(--finance)"></span> documentos</span>
+      <span><span class="lg-line dash" style="border-color:var(--muted)"></span> tracejado = vínculo por campo de texto, não FK</span>
+      <span><span class="dot" style="background:var(--flag-ink)"></span> achado de qualidade de dado</span>
+      <span><span class="dot" style="background:var(--note-ink)"></span> pendência / limitação de dado</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="toolbar">
+    <input class="search" id="q" type="text" placeholder="Filtrar por categoria ou campo… (ex.: banco, parcela, emenda)" oninput="filtrar(this.value)">
+    <button class="btn" onclick="toggleAll(true)">Expandir tudo</button>
+    <button class="btn" onclick="toggleAll(false)">Recolher tudo</button>
+  </div>
+
+  <!-- ===================== GRUPO 1 — HUB ===================== -->
+  <details class="group" id="grupo-hub" open>
+    <summary><span class="tw">▶</span><h2>Hub — Demanda (Nível 1)</h2><span class="grp-count">1 categoria</span></summary>
+    <div class="cards">
+
+    <div class="card" id="card-demanda" data-idx="demanda nivel 1 detalhes da demanda processo estado atual demandante solicitante valor do estado contrapartida total 22 combinacoes hub">
+      <div class="card-head"><span class="name">Demanda</span><span class="pill count">265 registros · HUB</span></div>
+      <div class="desc">Tabela-resumo "Detalhes da Demanda"/"Detalhes do Aditamento" — 1 por demanda, sempre presente. 22 combinações distintas de campos entre as 265 demandas (cada uma pode trazer um subconjunto diferente).</div>
+      <div class="meta-row"><span class="chip origem">Nível 1 · JSON: detalhes</span></div>
+      <details class="cols"><summary>campos e exemplos</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Processo</span><span class="tchip text">sempre presente</span></div><div class="col-desc">Pode vir "-" quando não há processo formal aberto</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Estado Atual</span><span class="tchip text">sempre presente</span></div><div class="col-desc">Vocabulário próprio e granular — 59 valores distintos no filtro Principal da planilha exportável</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Órgão/Entidade Responsável</span><span class="tchip text">sempre presente</span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Demandante</span><span class="tchip text">sempre presente</span></div><div class="col-ex"><b>"PREFEITURA MUNICIPAL DE SAO BERNARDO DO CAMPO"</b> nas 265</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Solicitante</span><span class="tchip text">sempre presente</span></div><div class="col-desc">Nome do agente público que abriu a demanda</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor do Estado</span><span class="tchip num">263/265</span></div><div class="col-desc">Candidato <code>ValorGoverno_VGov</code></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor Contrapartida</span><span class="tchip num">263/265</span></div><div class="col-desc">Candidato <code>ValorMunicipio_VGov</code></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor Total</span><span class="tchip num">262/265</span></div><div class="col-desc">Candidato <code>ValorAutorizado_VGov</code> — nem sempre = soma dos 2 anteriores</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Emenda / Nome do Parlamentar</span><span class="tchip text">121/115</span></div><div class="col-desc">Ausente nas 6 Emendas Agregadoras (têm Emenda mas não Parlamentar)</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Convênio</span><span class="tchip text">28/265</span></div><div class="col-ex"><b>"105172/2026"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor Liberado</span><span class="tchip num">19/265</span></div><div class="col-desc">Candidato <code>ValorLiberado_VGov</code></div></div>
+        </div>
+      </details>
+      <div class="rels">
+        <div class="rel"><span class="arrow out">→</span> 1:N cada — todas as categorias do Nível 2, widgets e Fase 2 (ver mapa)</div>
+        <div class="rel"><span class="arrow out">→</span> 0:N <span class="card-pill" onclick="irPara('aditamento')">Aditamento(s)</span> · por campo de texto cruzado, não FK</div>
+      </div>
+      <div class="achados">
+        <ul>
+          <li><b>Valor Total</b> nem sempre = Valor do Estado + Valor Contrapartida — 3 demandas em estágio avançado ficam sem os 2 primeiros preenchidos.</li>
+          <li><b>CNES Entidade Sob Intervenção</b> sempre "CNES não cadastrado" nas 265 — código real nunca observado.</li>
+          <li>16 demandas "legado SANI" têm <code>demid</code> interno divergente do número exibido (mapa fixo versionado).</li>
+        </ul>
+      </div>
+    </div>
+
+    </div>
+  </details>
+
+  <!-- ===================== GRUPO 2 — NÍVEL 2 ESTRUTURADO ===================== -->
+  <details class="group" id="grupo-nivel2">
+    <summary><span class="tw">▶</span><h2>Nível 2 — Dado Estruturado</h2><span class="grp-count">8 categorias</span></summary>
+    <div class="cards">
+
+    <div class="card" id="card-dados_bancarios" data-idx="dados bancarios banco agencia conta digito responsavel">
+      <div class="card-head"><span class="name">Dados Bancários</span><span class="pill count">76 seções · 81 demandas</span></div>
+      <div class="desc">Seção em acordeão, <code>arqid=0</code>. Agência/Conta já vêm com dígito verificador concatenado — bate direto com a regra de dados bancários do <code>CLAUDE.md</code>.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 004634)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Banco</span><span class="tchip text"></span></div><div class="col-ex"><b>"Banco do Brasil"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Agência com Dígito</span><span class="tchip text"></span></div><div class="col-ex"><b>"0427-8"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Conta com Dígito</span><span class="tchip text"></span></div><div class="col-ex"><b>"069226-3"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nome Responsável / Data abertura / Endereço / Município / Telefone</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1 (+ 6 ocorrências tipo PDF do mesmo título)</div></div>
+    </div>
+
+    <div class="card" id="card-itens_pt" data-idx="itens da demanda documentos do plano de trabalho item tipo valor situacao quantidade">
+      <div class="card-head"><span class="name">Itens da Demanda / Documentos do Plano de Trabalho</span><span class="pill count">57+6 seções</span></div>
+      <div class="desc">Mesmo conceito, nome varia por portfólio — grid de itens/insumos solicitados na demanda.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 060553)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nome do Item / Item</span><span class="tchip text"></span></div><div class="col-ex"><b>"Recapeamento Asfáltico Rua São Judas Tadeu"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Tipo de Item</span><span class="tchip text"></span></div><div class="col-ex"><b>"Pavimentação, Recapeamento, Guias e Sarjetas"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor Solicitado (R$)</span><span class="tchip num"></span></div><div class="col-ex"><b>R$ 214.750,28</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Situação / Quantidade</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+    </div>
+
+    <div class="card" id="card-cronograma" data-idx="cronograma de desembolso objeto data recurso estado prefeitura parcelas vigencia">
+      <div class="card-head"><span class="name">Cronograma de Desembolso</span><span class="pill count">4 seções · raro</span></div>
+      <div class="desc">Só 4 das 265 demandas têm essa seção — amostra pequena demais pra garantir que a forma observada generaliza.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span><span class="note">amostra pequena</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 120640)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Objeto</span><span class="tchip text"></span></div><div class="col-ex"><b>"REFORMA DO TELHADO DA PINACOTECA DE SÃO BERNARDO DO CAMPO"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Recurso do Estado / Recurso da Prefeitura</span><span class="tchip num"></span></div><div class="col-ex"><b>197.797,45</b> / <b>0,00</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Parcelas</span><span class="tchip num"></span></div><div class="col-desc">Nesta amostra é contagem simples ("1"), não sub-tabela — pode variar</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Vigência do Convênio (Meses) / Classificação Funcional Programática</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+      <div class="achados"><ul><li>Estrutura real difere do que uma sessão anterior havia descrito por amostragem dirigida (tabela de parcelas com % + valor) — aqui <b>Parcelas</b> é só contagem.</li></ul></div>
+    </div>
+
+    <div class="card" id="card-licitacao_contrato" data-idx="licitacao contrato dispensa inexigibilidade regime execucao valor cnpj nome">
+      <div class="card-head"><span class="name">Licitação &amp; Contrato</span><span class="pill count">71 seções cada · 37 demandas</span></div>
+      <div class="desc">2 seções sempre emparelhadas. Formato muda entre demandas mesmo com o mesmo título (campos chave/valor, tabela ou texto livre) — achado de qualidade de dado.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span><span class="flag">formatos variam</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 004634)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Dispensa / Inexigibilidade de licitação</span><span class="tchip text"></span></div><div class="col-ex"><b>"S"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Regime execução</span><span class="tchip text"></span></div><div class="col-ex"><b>"I"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor da Licitação</span><span class="tchip num"></span></div><div class="col-ex"><b>R$ 0,00</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">CNPJ / Nome (Contrato)</span><span class="tchip text"></span></div><div class="col-ex"><b>"46.523.239/0001-47"</b> / <b>"PREFEITURA MUNICIPAL DE SAO BERNARDO DO CAMPO"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor do contrato (obra/convênio) / Valor total do contrato</span><span class="tchip num"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1 (também aninhado dentro de cada <span class="card-pill" onclick="irPara('parcela_n')">Parcela N</span>)</div></div>
+      <div class="achados"><ul><li>Contagem subiu de 56→71 ocorrências após o bug do extrator (2026-07-31) ser corrigido — várias instâncias ficavam dentro de <b>Parcela N</b> com título sem filho <code>.panel-title</code>/<code>h4</code>, descartadas silenciosamente.</li></ul></div>
+    </div>
+
+    <div class="card" id="card-equipe_tecnica" data-idx="equipe tecnica nome cpf email profissao crea cau crc telefone tipo">
+      <div class="card-head"><span class="name">Equipe Técnica</span><span class="pill count">47 seções · 28 demandas</span></div>
+      <div class="desc">Responsáveis técnicos vinculados à demanda/parcela.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 004634)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nome</span><span class="tchip text"></span></div><div class="col-ex"><b>"JOÃO PAULO LÁZARO FERREIRA"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">CPF</span><span class="tchip text"></span></div><div class="col-ex"><b>"31801060851"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Profissão</span><span class="tchip text"></span></div><div class="col-ex"><b>"Engenheiro"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">CREA/CAU / CRC</span><span class="tchip text"></span></div><div class="col-ex"><b>"5070051178/SP"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">E-mail / Telefone / Tipo</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1 (também aninhado dentro de cada <span class="card-pill" onclick="irPara('parcela_n')">Parcela N</span>)</div></div>
+    </div>
+
+    <div class="card" id="card-processo_siafem" data-idx="processo siafem criacao andamento licitacao contrato extrato">
+      <div class="card-head"><span class="name">Processo SIAFEM</span><span class="pill count">53 seções · 55 demandas</span></div>
+      <div class="desc">Texto livre (às vezes "A criação do processo está em andamento"), com sub-blocos aninhados <b>Licitação</b>/<b>Contrato</b> próprios. 2 ocorrências saem como tipo PDF (extrato SIAFEM).</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels</span></div>
+      <details class="cols"><summary>campos e exemplo</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">(texto livre)</span><span class="tchip text"></span></div><div class="col-ex"><b>"Processo SIAFEM A criação do processo está em andamento"</b></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+    </div>
+
+    <div class="card" id="card-emenda_loa_desv" data-idx="dados da emenda loa desvinculada parlamentar data hora desvinculo">
+      <div class="card-head"><span class="name">Dados da Emenda LOA Desvinculada</span><span class="pill count">8 seções · 8 demandas</span></div>
+      <div class="desc">Bloco estático (sem clique, sempre visível quando aplicável) — não é um painel accordion como os demais.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels (sem clique)</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 103310)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Emenda LOA</span><span class="tchip text"></span></div><div class="col-ex"><b>"2026.263.78371"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Parlamentar</span><span class="tchip text"></span></div><div class="col-ex"><b>"Rogério Santos - MDB"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Data e Hora do Desvínculo</span><span class="tchip date"></span></div><div class="col-ex"><b>28/01/2026 12:26</b></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+    </div>
+
+    <div class="card" id="card-parcela_n" data-idx="parcela n container fluxo da parcela estado atual aprovada cadastramento licitacao contrato vistoria">
+      <div class="card-head"><span class="name">Parcela N (container)</span><span class="pill count">44 seções · 23 demandas</span></div>
+      <div class="desc">Container recursivo — 1 bloco por parcela de prestação de contas, cada um com até ~15 sub-painéis aninhados (mesmo tratamento PDF/estruturado). Sem conteúdo próprio, só agrupa.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels (container)</span></div>
+      <details class="cols"><summary>sub-painéis observados</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Fluxo da Parcela</span><span class="tchip text">22 seç. · 12 dem.</span></div><div class="col-desc">Indicador "Estado Atual" da parcela</div><div class="col-ex"><b>"Parcela aprovada"</b> / <b>"Em cadastramento"</b> (demanda 009774)</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valores de Liberação da Parcela / Nota fiscal / Extrato bancário / Dare</span><span class="tchip text"></span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Equipe Técnica / Licitação / Contrato</span><span class="tchip text"></span></div><div class="col-desc">Mesma estrutura dos nós próprios, só que aninhada</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Vistoria Obra - Prefeitura / Vistoria - Secretaria / Parecer da vistoria</span><span class="tchip text"></span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Parecer da Prestação de Contas / Despacho de Aprovação / Parecer Aprovação-Conclusivo</span><span class="tchip text"></span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Arquivos anexados à parcela</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+      <div class="achados">
+        <ul>
+          <li><b>Bug real corrigido em 2026-07-31:</b> sub-painéis com título direto no <code>panel-heading</code> (sem filho <code>.panel-title</code>/<code>h4</code>) eram descartados silenciosamente pelo extrator — inclui <b>Fluxo da Parcela</b>, que não aparecia em nenhuma demanda antes do fix. Corrigido com fallback no extrator; 265 demandas reprocessadas (+34% de seções no total).</li>
+        </ul>
+      </div>
+    </div>
+
+    </div>
+  </details>
+
+  <!-- ===================== GRUPO 3 — WIDGETS ===================== -->
+  <details class="group" id="grupo-widgets">
+    <summary><span class="tw">▶</span><h2>Widgets — Fora do Sistema de Painéis</h2><span class="grp-count">5 categorias</span></summary>
+    <div class="cards">
+
+    <div class="card" id="card-dados_emenda_modal" data-idx="dados da emenda modal parlamentar cnpj beneficiario objeto secretaria situacao valor tipo">
+      <div class="card-head"><span class="name">Dados da Emenda (modal)</span><span class="pill count">116 demandas</span></div>
+      <div class="desc">Modal "Visualizar Dados da Emenda", aberto pelo ícone de olho ao lado do valor da Emenda na tabela-resumo. Inclui o CNPJ do beneficiário.</div>
+      <div class="meta-row"><span class="chip origem">JSON: dadosEmendaModal</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 002536)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nome do Parlamentar</span><span class="tchip text"></span></div><div class="col-ex"><b>"Carla Morando"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nº da Emenda</span><span class="tchip text"></span></div><div class="col-ex"><b>"2020.018.17985"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">CNPJ do beneficiário</span><span class="tchip text"></span></div><div class="col-ex"><b>"46.523.239/0001-47"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Situação</span><span class="tchip text"></span></div><div class="col-ex"><b>"Emenda Processada - 21/05/2020 às 13:37"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Município / Objeto / Secretaria / Valor (R$) / Tipo</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1, requer clique (não pré-renderizado)</div></div>
+    </div>
+
+    <div class="card" id="card-pagamentos" data-idx="pagamentos numero ob data ne natureza despesa uo valor pago conta bancaria">
+      <div class="card-head"><span class="name">Pagamento(s)</span><span class="pill count">33 demandas</span></div>
+      <div class="desc">Grid DataTables, carrega sozinho ~3s após o carregamento da página (sem clique).</div>
+      <div class="meta-row"><span class="chip origem">JSON: pagamentos</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 059208)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Número OB / Data de pagamento</span><span class="tchip text"></span></div><div class="col-ex"><b>"2023OB57073"</b> / <b>09/06/2023</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Número NE / Data de Emissão NE</span><span class="tchip text"></span></div><div class="col-ex"><b>"2023NE08063"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Valor Pago</span><span class="tchip num"></span></div><div class="col-ex"><b>R$ 100.000,00</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Conta Bancária</span><span class="tchip text"></span></div><div class="col-ex"><b>"Banco: 001 Agência: 00427 Conta: 000485314"</b></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+      <div class="achados"><ul><li>Único candidato observado pra <code>ValorEmpenhado_VGov</code> — mas exige soma manual, não vem agregado por demanda.</li></ul></div>
+    </div>
+
+    <div class="card" id="card-emendas_unitarias" data-idx="emendas unitarias parlamentar partido cnpj beneficiario situacao valor">
+      <div class="card-head"><span class="name">Emendas Unitárias</span><span class="pill count">5 demandas</span></div>
+      <div class="desc">Grid das emendas individuais que compõem uma Emenda Agregadora (1 Demanda com várias emendas de parlamentares distintos).</div>
+      <div class="meta-row"><span class="chip origem">JSON: emendasUnitarias</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 038697)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Nº da Emenda</span><span class="tchip text"></span></div><div class="col-ex"><b>"2022.018.40376"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Parlamentar / Partido</span><span class="tchip text"></span></div><div class="col-ex"><b>"Carla Morando"</b> / <b>"PARTIDO SOCIAL DEMOCRÁTICO"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">CNPJ / Beneficiário</span><span class="tchip text"></span></div><div class="col-ex"><b>"46523239000147"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Situação / Valor</span><span class="tchip text"></span></div><div class="col-ex"><b>"Recurso Liberado"</b> / <b>R$ 270.000,00</b></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1, só nas 6 Emendas Agregadoras</div></div>
+    </div>
+
+    <div class="card" id="card-anexos" data-idx="arquivo anexado anexado a demanda anexo descricao etapa documentos rowspan">
+      <div class="card-head"><span class="name">Arquivo(s) anexado(s)</span><span class="pill count">265 demandas · 223 c/ anexo</span></div>
+      <div class="desc">Tabela paginada, requer clique real no cabeçalho (DataTable só carrega ao abrir). 42 demandas ficam genuinamente sem anexo.</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels + JSON: anexos</span></div>
+      <details class="cols"><summary>campos e exemplo (demanda 002127)</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Anexo</span><span class="tchip text"></span></div><div class="col-ex"><b>"I"</b>, <b>"II"</b>, <b>"III"</b>...</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Descrição</span><span class="tchip text"></span></div><div class="col-ex"><b>"Informação de atendimento à LRF"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Etapa</span><span class="tchip text"></span></div><div class="col-ex"><b>"Em análise técnica - SUPED"</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Documento(s)</span><span class="tchip text"></span></div><div class="col-desc">Parseado em {rótulo, data} — pode ter mais de 1 documento por Anexo</div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1 (também 1 por <span class="card-pill" onclick="irPara('parcela_n')">Parcela N</span>)</div></div>
+      <div class="achados"><ul><li>Bug corrigido em sessão anterior (2026-07-30): linhas com <code>rowspan</code> (mesmo Anexo com &gt;1 documento) perdiam alinhamento de coluna — corrigido com reconstrução de grid ciente de rowspan.</li></ul></div>
+    </div>
+
+    <div class="card" id="card-avisos" data-idx="avisos dados da emenda atencao preenchimento impedimento tecnico diligencia">
+      <div class="card-head"><span class="name">Avisos</span><span class="pill count">126 demandas · 11 tipos</span></div>
+      <div class="desc">Blocos de alerta estáticos (<code>.alert</code>), fora do sistema de painéis accordion — categoria documentada pela primeira vez nesta sessão.</div>
+      <div class="meta-row"><span class="chip origem">JSON: avisos</span></div>
+      <details class="cols"><summary>os 11 títulos distintos</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">Dados da emenda</span><span class="tchip text">116/116</span></div><div class="col-desc">Redundante com o modal — mesmas 116 demandas, mesmo conteúdo em texto corrido</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">ATENÇÃO AO PREENCHIMENTO DA PRESTAÇÃO DE CONTAS ANUAL!</span><span class="tchip text">18/8</span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">Enviado Solicitação de Impedimento Técnico</span><span class="tchip text">2/2</span></div><div class="col-ex"><b>"Após geração do Termo de Desistência foi enviado um e-mail..."</b></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">+ 8 outros avisos de preenchimento/atenção</span><span class="tchip text"></span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div></div>
+    </div>
+
+    </div>
+  </details>
+
+  <!-- ===================== GRUPO 4 — VÍNCULO ===================== -->
+  <details class="group" id="grupo-vinculo">
+    <summary><span class="tw">▶</span><h2>Vínculo — Principal ↔ Aditamento</h2><span class="grp-count">1 categoria</span></summary>
+    <div class="cards">
+
+    <div class="card" id="card-aditamento" data-idx="aditamento principal orfa 006521 valor divergente 067260 067261">
+      <div class="card-head"><span class="name">Aditamento(s)</span><span class="pill count">31 de 265 demandas</span></div>
+      <div class="desc">Vínculo por campo de texto cruzado (não FK): <code>Aditamentos/Rescisões</code> na Principal → <code>Demanda Principal</code> no Aditamento. <b>Decisão de entregável (2026-07-30):</b> 1 registro por Principal, Aditamento(s) como detalhe expansível.</div>
+      <div class="meta-row"><span class="chip origem">Nível 1 · campo texto</span><span class="flag">valor pode divergir</span></div>
+      <details class="cols"><summary>exemplos reais</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">002127 → 006958, 025046</span></div><div class="col-desc">1 Principal com 2 Aditamentos</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">067260 (Principal) / 067261 (Aditamento)</span></div><div class="col-desc">Valores divergentes verificados: Valor do Estado R$0 vs R$24mi; Valor Liberado R$99mi vs R$24mi</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">006521</span><span class="tchip text">órfã</span></div><div class="col-desc">Aditamento cancelado sem nenhuma Principal referenciando-o — desconexão real da própria fonte</div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow in">←</span> N:1 <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> (mesma entidade, papel diferente)</div></div>
+      <div class="achados">
+        <ul>
+          <li><b>Correção nesta sessão:</b> o exemplo de divergência 067260/067261 estava registrado com a direção trocada no <code>BackLog.md</code> — corrigido, e apareceu um 3º valor divergente (<code>Valor Liberado</code>) não visto antes.</li>
+          <li>92 diferenças de campo confirmadas entre pares Principal↔Aditamento em sessão anterior, incluindo <code>Valor</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    </div>
+  </details>
+
+  <!-- ===================== GRUPO 5 — DOCUMENTOS ===================== -->
+  <details class="group" id="grupo-documentos">
+    <summary><span class="tw">▶</span><h2>Documentos</h2><span class="grp-count">2 categorias</span></summary>
+    <div class="cards">
+
+    <div class="card" id="card-secoes_pdf" data-idx="secoes tipo pdf catalogo arqid idanalise iframe">
+      <div class="card-head"><span class="name">Seções tipo PDF (catálogo)</span><span class="pill count">2.239 seções · 311 títulos</span></div>
+      <div class="desc">Seções do Nível 2 cujo conteúdo é documento PDF via <code>iframe</code> — só título + <code>arqid</code> ficam catalogados, o conteúdo em si não é extraído aqui (isso é o que a Fase 2 faz, para 7 tipos selecionados).</div>
+      <div class="meta-row"><span class="chip origem">Nível 2 · panels (isPdfType)</span><span class="note">129 sem arqid</span></div>
+      <details class="cols"><summary>achados sobre o catálogo</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">arqid="0" mas classificado PDF</span><span class="tchip text">166 ocorrências</span></div><div class="col-desc">Classificação real é por conteúdo (iframe), não só pelo atributo arqid</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">sem arqid nem idAnalise</span><span class="tchip text">129 ocorrências · 9 títulos · 58 demandas</span></div><div class="col-desc">Análise de Admissibilidade, Folha capa emenda, NOTIFICAÇÃO BENEFICIÁRIO/DILIGÊNCIA/PARLAMENTAR, Parecer LDO, Validação dos Documentos Beneficiário — sem identificador para baixar individualmente</div></div>
+        </div>
+      </details>
+      <div class="rels">
+        <div class="rel"><span class="arrow out">→</span> <span class="card-pill" onclick="irParaNo('demanda')">Demanda</span> · N:1</div>
+        <div class="rel"><span class="arrow in">←</span> 1:N <span class="card-pill" onclick="irPara('fase2')">Fase 2</span> · subconjunto extraído (implied)</div>
+      </div>
+      <div class="achados"><ul><li>Catálogo completo dos 414 títulos (incluindo os de dado estruturado): <code>SBGov_BaseSemPapel_Documentacao_CatalogoSecoes.md</code>.</li></ul></div>
+    </div>
+
+    <div class="card" id="card-fase2" data-idx="fase 2 termo de ciencia notificacao convenio plano de trabalho analise processo licitatorio memorial descritivo tecnica licitacao">
+      <div class="card-head"><span class="name">Fase 2 — Documentos Extraídos</span><span class="pill count">245 documentos · 115 demandas</span></div>
+      <div class="desc">Subconjunto de "Seções tipo PDF" priorizado com o usuário (7 tipos), baixado via requisição HTTP autenticada por <code>arqid</code> e com texto extraído (<code>pypdfium2</code>).</div>
+      <div class="meta-row"><span class="chip origem">DocumentosPDF_extraidos.json</span></div>
+      <details class="cols"><summary>os 7 tipos e contagem</summary>
+        <div class="colwrap">
+          <div class="col-row"><div class="col-line1"><span class="col-name">TermoDeCienciaENotificacao</span><span class="tchip text">90</span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">PlanoDeTrabalho</span><span class="tchip text">65</span></div><div class="col-desc">11 demandas com 2 versões distintas (sufixo _2)</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">TermoDeConvenio</span><span class="tchip text">59</span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">AnaliseDoProcessoLicitatorio</span><span class="tchip text">24</span></div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">MemorialDescritivo</span><span class="tchip text">4</span></div><div class="col-desc">Raro — provavelmente existe sob outro nome em outros portfólios</div></div>
+          <div class="col-row"><div class="col-line1"><span class="col-name">AnaliseTecnicaDaLicitacao</span><span class="tchip text">3</span></div></div>
+        </div>
+      </details>
+      <div class="rels"><div class="rel"><span class="arrow out">→</span> subconjunto de <span class="card-pill" onclick="irPara('secoes_pdf')">Seções tipo PDF</span></div></div>
+      <div class="achados"><ul><li>9 dos 245 são novos desde a extração original (236, 2026-07-29) — não pelo bug do extrator, e sim porque 3 demandas que travavam consistentemente foram recuperadas nesta sessão com timeout de navegação maior.</li></ul></div>
+    </div>
+
+    </div>
+  </details>
+
+</div>
+
+<footer class="wrap">
+  <p>SBGov_Recursos · Base Sem Papel · Artefato Estrutura · Fonte: <code>demandas.spsempapel.sp.gov.br</code>, sessão logada (sem API). Dado consolidado em <code>demandas_detalhe_nivel1_29-07-2026.json</code>, <code>demandas_detalhe_nivel2_29-07-2026.json</code> e <code>DocumentosPDF_extraidos_29-07-2026.json</code> — ver <code>SBGov_BaseSemPapel_Documentacao.md</code> para o dicionário completo.</p>
+</footer>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+var NODEDATA = {
+  'demanda': {desc:'Entidade central da base — 1 Demanda por recurso, com Nível 1 (resumo) sempre presente e Nível 2 (acordeão) variável.', cols:['265 registros (234 Principal + 31 Aditamento)','22 combinações de campo','7 campos sempre presentes']},
+  'dados_bancarios': {desc:'Dados bancários da conta vinculada à demanda — já com dígito verificador concatenado.', cols:['Banco','Agência com Dígito','Conta com Dígito','Nome Responsável','Endereço, Município, Telefone']},
+  'itens_pt': {desc:'Grid de itens/insumos solicitados — nome varia por portfólio (Itens da Demanda / Documentos do Plano de Trabalho).', cols:['Nome do Item','Tipo de Item','Valor Solicitado (R$)','Situação']},
+  'cronograma': {desc:'Cronograma de desembolso por parcela — só 4 ocorrências, amostra pequena.', cols:['Objeto','Recurso do Estado / Prefeitura','Parcelas (contagem)','Vigência do Convênio']},
+  'licitacao_contrato': {desc:'Dados da licitação e do contrato — formato muda entre demandas mesmo com o mesmo título.', cols:['Dispensa/Inexigibilidade','Regime execução','Valor da Licitação','CNPJ, Nome, Valor do contrato']},
+  'equipe_tecnica': {desc:'Responsáveis técnicos vinculados à demanda ou parcela.', cols:['Nome','CPF','Profissão','CREA/CAU ou CRC','E-mail, Telefone']},
+  'processo_siafem': {desc:'Status do processo no SIAFEM — texto livre, com sub-blocos Licitação/Contrato aninhados.', cols:['Texto livre de status','2 ocorrências saem como PDF (extrato)']},
+  'emenda_loa_desv': {desc:'Bloco estático (sem clique) mostrado quando a emenda LOA foi desvinculada da demanda.', cols:['Emenda LOA','Parlamentar','Data e Hora do Desvínculo']},
+  'parcela_n': {desc:'Container recursivo — 1 por parcela de prestação de contas, com até ~15 sub-painéis aninhados.', cols:['Fluxo da Parcela (Estado Atual)','Licitação, Contrato, Equipe Técnica','Nota fiscal, Extrato bancário, Dare','Vistorias e pareceres']},
+  'dados_emenda_modal': {desc:'Modal "Dados da Emenda", aberto por clique no ícone de olho — inclui CNPJ do beneficiário.', cols:['Nome do Parlamentar','Nº da Emenda','CNPJ do beneficiário','Situação, Valor, Tipo']},
+  'pagamentos': {desc:'Grid de Ordens Bancárias/Notas de Empenho — carrega sozinho, sem clique.', cols:['Número OB','Número NE','Valor Pago','Conta Bancária']},
+  'emendas_unitarias': {desc:'Grid das emendas individuais que compõem uma Emenda Agregadora.', cols:['Nº da Emenda','Parlamentar, Partido','CNPJ, Beneficiário','Situação, Valor']},
+  'anexos': {desc:'Lista de anexos da demanda — requer clique real (DataTable só carrega ao abrir).', cols:['Anexo, Descrição, Etapa','Documento(s): {rótulo, data}','223 de 265 demandas com pelo menos 1']},
+  'avisos': {desc:'Blocos de alerta estáticos, fora do sistema de painéis — categoria nova, documentada nesta sessão.', cols:['11 títulos distintos','"Dados da emenda" é redundante com o modal','"Enviado Solicitação de Impedimento Técnico" só existe aqui']},
+  'aditamento': {desc:'Vínculo Principal↔Aditamento por campo de texto cruzado — valores podem divergir entre os dois.', cols:['31 de 265 demandas são Aditamento','1 caso órfão (006521)','Decisão: 1 registro por Principal + Aditamentos como detalhe']},
+  'secoes_pdf': {desc:'Seções do Nível 2 classificadas como documento PDF — só título+arqid catalogados aqui.', cols:['2.239 ocorrências, 311 títulos','129 sem arqid (9 títulos)','166 com arqid=0 mas classificadas PDF por conteúdo']},
+  'fase2': {desc:'Subconjunto de 7 tipos de documento, baixado e com texto extraído.', cols:['245 documentos, 115 demandas','100% com texto extraído (pypdfium2)','7 tipos priorizados com o usuário']}
+};
+
+var EDGES = [
+  {id:'e1', from:'demanda', to:'dados_bancarios', type:'estrut'},
+  {id:'e2', from:'demanda', to:'itens_pt', type:'estrut'},
+  {id:'e3', from:'demanda', to:'cronograma', type:'estrut'},
+  {id:'e4', from:'demanda', to:'licitacao_contrato', type:'estrut'},
+  {id:'e5', from:'demanda', to:'equipe_tecnica', type:'estrut'},
+  {id:'e6', from:'demanda', to:'processo_siafem', type:'estrut'},
+  {id:'e7', from:'demanda', to:'emenda_loa_desv', type:'estrut'},
+  {id:'e8', from:'demanda', to:'parcela_n', type:'estrut'},
+  {id:'e9', from:'demanda', to:'dados_emenda_modal', type:'widget'},
+  {id:'e10', from:'demanda', to:'pagamentos', type:'widget'},
+  {id:'e11', from:'demanda', to:'emendas_unitarias', type:'widget'},
+  {id:'e12', from:'demanda', to:'anexos', type:'widget'},
+  {id:'e13', from:'demanda', to:'avisos', type:'widget'},
+  {id:'e14', from:'demanda', to:'aditamento', type:'vinculo'},
+  {id:'e15', from:'demanda', to:'secoes_pdf', type:'doc'},
+  {id:'e16', from:'secoes_pdf', to:'fase2', type:'doc-implied'}
+];
+
+var EDGE_CLASS = {
+  'estrut':'edge-estrut', 'widget':'edge-widget', 'doc':'edge-doc', 'doc-implied':'edge-doc edge-implied',
+  'vinculo':'edge-vinculo'
+};
+
+function layoutEdges(){
+  var svg = document.getElementById('diagram-svg');
+  var g = document.getElementById('edges-g');
+  var container = document.getElementById('diagram-grid');
+  if(!svg || !container) return;
+  var rect0 = container.getBoundingClientRect();
+  svg.setAttribute('width', rect0.width);
+  svg.setAttribute('height', rect0.height);
+  g.innerHTML = '';
+  EDGES.forEach(function(e){
+    var a = document.getElementById('n-'+e.from);
+    var b = document.getElementById('n-'+e.to);
+    if(!a||!b) return;
+    var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    var x1 = ra.left - rect0.left + ra.width, y1 = ra.top - rect0.top + ra.height/2;
+    var x2 = rb.left - rect0.left, y2 = rb.top - rect0.top + rb.height/2;
+    if(rb.left < ra.left){ x1 = ra.left - rect0.left; x2 = rb.left - rect0.left + rb.width; }
+    var dx = Math.max(30, (x2-x1)*0.5);
+    var d = 'M'+x1+','+y1+' C'+(x1+dx)+','+y1+' '+(x2-dx)+','+y2+' '+x2+','+y2;
+    var path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', EDGE_CLASS[e.type] || 'edge-estrut');
+    g.appendChild(path);
+  });
+}
+
+var tt = null;
+function showTooltip(id, evt){
+  var data = NODEDATA[id];
+  if(!data) return;
+  tt.innerHTML = '<div class="tt-name">'+id+'</div><div class="tt-desc">'+data.desc+'</div><div class="tt-cols">'+data.cols.join('<br>')+'</div>';
+  tt.classList.add('show');
+  positionTooltip(evt);
+}
+function positionTooltip(evt){
+  if(!tt) return;
+  var x = evt.clientX + 16, y = evt.clientY + 16;
+  var maxX = window.innerWidth - 320, maxY = window.innerHeight - 200;
+  if(x > maxX) x = evt.clientX - 316;
+  if(y > maxY) y = evt.clientY - 180;
+  tt.style.left = x+'px';
+  tt.style.top = y+'px';
+}
+function hideTooltip(){ if(tt) tt.classList.remove('show'); }
+
+function irPara(cardId){
+  var card = document.getElementById('card-'+cardId);
+  if(!card) return;
+  var det = card.closest('details.group');
+  if(det && !det.open) det.open = true;
+  setTimeout(function(){
+    card.scrollIntoView({behavior:'smooth', block:'center'});
+    card.classList.add('flash');
+    setTimeout(function(){ card.classList.remove('flash'); }, 1300);
+  }, det && !det.open ? 0 : 50);
+}
+
+function irParaNo(nodeId){
+  var node = document.getElementById('n-'+nodeId);
+  if(node){ node.classList.add('flash'); setTimeout(function(){node.classList.remove('flash');}, 1100); }
+  irPara(nodeId);
+}
+
+function toggleAll(open){
+  document.querySelectorAll('details.group').forEach(function(d){ d.open = open; });
+}
+
+function filtrar(qraw){
+  var q = qraw.toLowerCase().trim();
+  document.querySelectorAll('.card').forEach(function(card){
+    var idx = (card.getAttribute('data-idx')||'').toLowerCase();
+    card.classList.toggle('hid', q.length>0 && idx.indexOf(q)===-1);
+  });
+  document.querySelectorAll('details.group').forEach(function(det){
+    var grid = det.querySelector('.cards');
+    if(!grid) return;
+    var visible = Array.prototype.some.call(grid.querySelectorAll('.card'), function(c){return !c.classList.contains('hid');});
+    det.classList.toggle('hid', q.length>0 && !visible);
+    if(q.length>0){ det.open = visible; }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  tt = document.getElementById('tooltip');
+  layoutEdges();
+  document.querySelectorAll('.node').forEach(function(node){
+    var id = node.id.replace(/^n-/, '');
+    node.addEventListener('mouseenter', function(evt){ showTooltip(id, evt); });
+    node.addEventListener('mousemove', function(evt){ positionTooltip(evt); });
+    node.addEventListener('mouseleave', hideTooltip);
+    node.addEventListener('focus', function(evt){ showTooltip(id, {clientX:node.getBoundingClientRect().left, clientY:node.getBoundingClientRect().bottom}); });
+    node.addEventListener('blur', hideTooltip);
+    node.addEventListener('click', function(){ irParaNo(id); });
+    node.addEventListener('keydown', function(evt){ if(evt.key==='Enter' || evt.key===' '){ evt.preventDefault(); irParaNo(id); } });
+  });
+  var resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(layoutEdges, 120);
+  });
+  document.querySelectorAll('details.group').forEach(function(d){
+    d.addEventListener('toggle', function(){ if(d.open) setTimeout(layoutEdges, 260); });
+  });
+});
+</script>
+</div>

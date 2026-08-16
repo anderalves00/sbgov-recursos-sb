@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SBGov — Estrutura — Portal FNAS</title>
+<style>
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --ink:#223032; --muted:#5F6F6D; --line:#DDE4E1;
+  --accent:#0E7C6B; --accent-soft:#E3F0EC; --der:#A87721; --der-soft:#F3E9D4;
+  --mix:#3A6EA5; --mix-soft:#E1E9F3; --dup:#B4574B; --dup-soft:#F7E4E1;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#111B1D; --surface:#182426; --ink:#D9E3E0; --muted:#8AA09C; --line:#2A3A3C;
+  --accent:#46B49C; --accent-soft:#1D3330; --der:#C99A45; --der-soft:#3A311A;
+  --mix:#7FB0E0; --mix-soft:#1B2A3A; --dup:#DE8578; --dup-soft:#3A211E;
+}}
+:root[data-theme="dark"]{color-scheme:dark} :root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:13.5px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.page{padding:22px 18px 34px;max-width:1200px;margin:0 auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.7rem;color:var(--accent);font-weight:600}
+h1{margin:.2rem 0 .35rem;font-size:1.55rem}
+.sub{color:var(--muted);max-width:95ch;margin-bottom:16px;font-size:.9rem}
+code{background:var(--accent-soft);color:var(--accent);padding:1px 5px;border-radius:4px;font-size:.85em}
+.stats{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 12px}
+.stat b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+
+.mapa{display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:26px}
+.no{background:var(--surface);border:2px solid var(--accent);border-radius:12px;
+  padding:10px 22px;font-weight:700;text-align:center;min-width:220px}
+.no .n{display:block;font-size:.68rem;font-weight:400;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.05em;margin-top:2px}
+.no.filho{border-color:var(--mix);font-weight:600}
+.liga{display:flex;align-items:center;gap:14px;margin:2px 0}
+.linha-liga{width:2px;height:22px;background:var(--line)}
+.rot-liga{font-size:.72rem;color:var(--muted);background:var(--surface);border:1px solid var(--line);
+  border-radius:20px;padding:3px 12px}
+.filhos{display:flex;gap:34px;align-items:flex-start;margin-top:4px}
+.ramo{display:flex;flex-direction:column;align-items:center;gap:2px}
+
+.crossbox{background:var(--mix-soft);border:1px solid var(--mix);border-radius:11px;
+  padding:14px 18px;margin:10px 0 26px}
+.crossbox h3{margin:0 0 8px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mix)}
+.crossrow{display:flex;gap:10px;align-items:baseline;font-size:.85rem;padding:3px 0}
+.crossrow b{min-width:150px}
+
+.secao{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:16px 20px;margin-bottom:16px}
+.secao h2{margin:0 0 4px;font-size:1.05rem}
+.secao .meta{color:var(--muted);font-size:.8rem;margin-bottom:12px}
+.colrow{display:flex;align-items:baseline;gap:9px;padding:5px 0;border-bottom:1px solid var(--line);
+  flex-wrap:wrap}
+.colrow:last-child{border-bottom:none}
+.colrow b{min-width:190px;font-size:.85rem}
+.obs{color:var(--muted);font-size:.78rem;flex:1;min-width:220px}
+.ex{color:var(--accent);font-size:.72rem;font-variant-numeric:tabular-nums}
+.tag{font-size:.62rem;padding:2px 7px;border-radius:5px;text-transform:uppercase;
+  letter-spacing:.04em;font-weight:700;min-width:64px;text-align:center}
+.tag-pk{background:var(--accent);color:#fff}
+.tag-util{background:var(--accent-soft);color:var(--accent)}
+.tag-der{background:var(--der-soft);color:var(--der)}
+.tag-dup{background:var(--dup-soft);color:var(--dup)}
+.constbox{margin-top:10px;font-size:.78rem;color:var(--muted)}
+</style></head><body><div class="page">
+<div class="eyebrow">SBGov · Portal FNAS (Fundo Nacional de Assistência Social) · Modo Estrutura</div>
+<h1>Estrutura da Base Portal FNAS</h1>
+<div class="sub">Mapa da estrutura útil — não as 92 colunas cruas das 3 planilhas. O painel exporta a
+camada de apresentação junto com a de dados: 14 colunas constantes e 4 duplicatas exatas em
+Repasses ficam sinalizadas, não escondidas. Retrato de 06/08/2026.</div>
+
+<div class="stats">
+  <div class="stat"><b>3</b><span>planilhas</span></div>
+  <div class="stat"><b>2.919 × 57</b><span>Repasses</span></div>
+  <div class="stat"><b>25 × 19</b><span>Emendas</span></div>
+  <div class="stat"><b>2.012 × 16</b><span>Saldos</span></div>
+  <div class="stat"><b>≈34</b><span>colunas úteis em Repasses</span></div>
+</div>
+
+<div class="mapa">
+  <div class="no">Repasses<span class="n">PK: CO_PROCESSO · 2.919 linhas</span></div>
+  <div class="filhos">
+    <div class="ramo">
+      <div class="linha-liga"></div>
+      <div class="rot-liga">Programação (25/25)</div>
+      <div class="linha-liga"></div>
+      <div class="no filho">Emendas<span class="n">subconjunto · 25 linhas</span></div>
+    </div>
+    <div class="ramo">
+      <div class="linha-liga"></div>
+      <div class="rot-liga">Conta Corrente (55/56)</div>
+      <div class="linha-liga"></div>
+      <div class="no filho">Saldos<span class="n">outra granularidade · 2.012 linhas</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="crossbox">
+  <h3>Relação com a Base Parcerias — 3 chaves independentes, 10/10 cada</h3>
+  <div class="crossrow"><b>Programação</b> = <code>parceria.nu_externo</code></div>
+  <div class="crossrow"><b>Processo</b> = <code>parceria.cd_processo_sei</code></div>
+  <div class="crossrow"><b>Conta Corrente</b> = <code>parceria_conta.tx_conta</code></div>
+</div>
+
+<div class="secao">
+  <h2>Repasses <span class="tag tag-pk">HUB</span></h2>
+  <div class="meta">2.919 linhas × 57 colunas — 1 linha = 1 repasse do FNAS ao município</div>
+  <div class="colrow"><span class="tag tag-pk">PK</span><b>CO_PROCESSO</b><span class="obs">PK real da tabela — 2.919/2.919 únicos.</span><span class="ex">ex.: 5068517</span></div><div class="colrow"><span class="tag tag-pk">PK</span><b>CO_PROCESSO_ENTIDADE</b><span class="obs">PK alternativa — 2.919/2.919 únicos.</span><span class="ex">ex.: 6484995</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Cnpj</b><span class="obs">2 distintos — FMAS 2.234 · Prefeitura 685.</span><span class="ex">ex.: 13961967000181</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Processo</b><span class="obs">2.418 distintos — 17 dígitos (2.395) e 6 dígitos (23). FK para Parcerias (cd_processo_sei).</span><span class="ex">ex.: 71000075032201925</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Programação</b><span class="obs">25 distintos — &quot;-&quot; em 2.894. FK para Parcerias (nu_externo) e para Emendas. 1 valor corrompido (0003.9).</span><span class="ex">ex.: 354870820190001</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Grupo 1</b><span class="obs">8 distintos — bloco resumido.</span><span class="ex">ex.: SIGTV-SUAS</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Bloco</b><span class="obs">8 distintos — bloco por extenso.</span><span class="ex">ex.: Transferências Voluntárias Fundo a Fundo</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo Conta</b><span class="obs">47 distintos — siglas (BL MAC FNAS, PFMC).</span><span class="ex">ex.: SIGTV_ESTR3</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Lista Credor</b><span class="obs">2.870 distintos — identificador interno do credor.</span><span class="ex">ex.: 1671182</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Ordem Bancária</b><span class="obs">2.731 distintos — &quot;-&quot; em 44 linhas.</span><span class="ex">ex.: 801486</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Data Ordem Bancária</b><span class="obs">955 distintos — 07/01/2005 a 31/07/2026.</span><span class="ex">ex.: 2020-04-09 00:00:00</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Ano Referência</b><span class="obs">22 distintos — NÃO é o campo oficial de ano do recurso (diverge de NU_ANO_EXERCICIO em 258 repasses).</span><span class="ex">ex.: 2020</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Mês Referência</b><span class="obs">12 distintos — jan…dez.</span><span class="ex">ex.: abr</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Agência</b><span class="obs">2 formas — 004278 (2.915) e 04278 (4). Último dígito é DV.</span><span class="ex">ex.: 004278</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Conta Corrente</b><span class="obs">90 grafias para 76 contas reais — normalizar removendo zero à esquerda.</span><span class="ex">ex.: 0000651419</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Valor de Repasse</b><span class="obs">980 distintos — soma 81.096.355,21. 44 linhas com valor 0,00.</span><span class="ex">ex.: 100000</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_BLOCO_GERAL</b><span class="obs">8 distintos — código do bloco.</span><span class="ex">ex.: 14</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_ENTIDADE</b><span class="obs">2 distintos — 81663 FMAS · 4468 Prefeitura.</span><span class="ex">ex.: 81663</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_PISO_PAI</b><span class="obs">45 distintos — agrupador de piso.</span><span class="ex">ex.: 1662</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_SEQ_PROGRAMA_FUNDO</b><span class="obs">76 distintos — programa do fundo. Chave do recurso RECORRENTE (com ano e CNPJ).</span><span class="ex">ex.: 1575</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_TIPO_ENTIDADE</b><span class="obs">2 distintos — 13 fundo · 01 prefeitura.</span><span class="ex">ex.: 13</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>CO_TIPO_PROGRAMA</b><span class="obs">5 distintos.</span><span class="ex">ex.: 6</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>DS_PISO_PAI</b><span class="obs">43 distintos — piso por extenso.</span><span class="ex">ex.: SIGTV - 2019 E 2020</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>DS_PROGRAMA_FUNDO</b><span class="obs">66 distintos — melhor granularidade temática.</span><span class="ex">ex.: SIGTV ESTRUTURAÇÃO CUSTEIO</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo de Execução</b><span class="obs">4 distintos — SERVIÇO 2.512 · GESTÃO 300 · PROGRAMAS 82 · SIGTV 25.</span><span class="ex">ex.: SIGTV</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo do Programa</b><span class="obs">14 distintos.</span><span class="ex">ex.: Estruturação da Rede de Serviços do SUAS</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>DT_ENTREGA_RECURSO</b><span class="obs">782 distintos — tipo misto: 2.191 datas, 728 &quot;-&quot;.</span><span class="ex">ex.: 2020-04-15 00:00:00</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>DT_ENVIO_SIAFI</b><span class="obs">692 distintos — tipo misto: 2.287 datas, 632 &quot;-&quot;.</span><span class="ex">ex.: 2020-04-06 00:00:00</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>GRUPO2</b><span class="obs">13 distintos.</span><span class="ex">ex.: SIGTV-SUAS SEM COVID</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>NO_PROGRAMA_RESUMIDO</b><span class="obs">65 distintos.</span><span class="ex">ex.: SIGTV ESTRUTURAÇÃO CUSTEIO</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>NO_RAZAO_SOCIAL_ENTIDADE</b><span class="obs">2 distintos.</span><span class="ex">ex.: FUNDO MUNICIPAL DE ASSISTÊNCIA SOCIAL</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>NU_ANO_EXERCICIO</b><span class="obs">23 distintos — CAMPO OFICIAL de ano do recurso (Item 4, 06/08/2026). ≡ NU_ANO_EXERCICIO_FILTRO.</span><span class="ex">ex.: 2019</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>NU_GND</b><span class="obs">3 distintos — &quot;-&quot; 2.894 · 3 (19) · 4 (6).</span><span class="ex">ex.: 3</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>NU_MES_EXERCICIO</b><span class="obs">12 distintos — ≡ NU_MES_EXERCICIO_FILTRO.</span><span class="ex">ex.: 11</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>ST_SIGTV</b><span class="obs">2 distintos — S = tem emenda, 0 divergências contra Programação.</span><span class="ex">ex.: S</span></div><div class="colrow"><span class="tag tag-der">CONST. ÚTIL</span><b>DH_CARGA</b><span class="obs">Constante (8/5/2026 7:30:08 AM), mas útil — é o DataExtracao do Padrão, vindo da própria fonte.</span><span class="ex">ex.: 8/5/2026 7:30:08 AM</span></div>
+  <div class="colrow"><span class="tag tag-dup">DUPLICATA</span><b>NU_ANO_CRIACAO_SIAFI</b><span class="obs">idêntica a <code>Ano Referência</code> — descartável</span></div><div class="colrow"><span class="tag tag-dup">DUPLICATA</span><b>NU_ANO_EXERCICIO_FILTRO</b><span class="obs">idêntica a <code>NU_ANO_EXERCICIO</code> — descartável</span></div><div class="colrow"><span class="tag tag-dup">DUPLICATA</span><b>NU_MES_EXERCICIO_FILTRO</b><span class="obs">idêntica a <code>NU_MES_EXERCICIO</code> — descartável</span></div><div class="colrow"><span class="tag tag-dup">DUPLICATA</span><b>Por Ano</b><span class="obs">idêntica a <code>NU_ANO_ENVIO_SIAFI</code> — descartável</span></div>
+  <div class="constbox"><b>14 colunas constantes descartadas</b> (resíduo do filtro UF=SP,
+  Município=São Bernardo do Campo): <code>Ibge</code>, <code>UF</code>, <code>Município</code>, <code>Esfera Administrativa</code>, <code>CO_IBGE_REPASSE</code>, <code>DS_CANAL</code>, <code>NO_CIDADE</code>, <code>NO_CIDADE_UNICO</code>, <code>NO_MUNICIPIO_UNICO</code>, <code>NO_REGIAO</code>, <code>NO_UF</code>, <code>ST_CAPITAL</code>, <code>ST_ESTADUAL</code></div>
+</div>
+
+<div class="secao">
+  <h2>Emendas</h2>
+  <div class="meta">25 linhas × 19 colunas — 1 linha = 1 Ordem Bancária paga com origem em emenda
+  parlamentar (não 1 emenda: <code>354870820210001</code> aparece 2×, mesmo parlamentar, OBs
+  diferentes). Todas do Fundo Municipal de Assistência Social.</div>
+  <div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Ordem Bancária</b><span class="ex">ex.: 7046</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>OB SIAFI</b><span class="ex">ex.: 7046</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Programação</b><span class="ex">ex.: 354870820250003.9</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>GND</b><span class="ex">ex.: 3</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo Emenda</b><span class="ex">ex.: Emendas individuais</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Sigla Partido Político</b><span class="ex">ex.: DEM</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Nome Partido</b><span class="ex">ex.: DEMOCRATAS</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Nome Parlamentar</b><span class="ex">ex.: KIM PATROCA KATAGUIRI</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Valor de Repasse</b><span class="ex">ex.: 200000</span></div>
+</div>
+
+<div class="secao">
+  <h2>Saldos</h2>
+  <div class="meta">2.012 linhas × 16 colunas — 1 linha = o saldo de uma conta num mês. PK: Período
+  Histórico + Conta Corrente. Junção com Repasses é sempre por conta bancária, nunca por Tipo Conta
+  (vocabulário não comparável entre as duas planilhas).</div>
+  <div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Período Histórico</b><span class="ex">ex.: 202203</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Entidade</b><span class="ex">ex.: 13961967000181</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo Entidade</b><span class="ex">ex.: 13</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Nível</b><span class="ex">ex.: Grupo de Programas</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Tipo Conta</b><span class="ex">ex.: Estruturação da Rede Socioassistencial -</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Conta Corrente</b><span class="ex">ex.: 651419</span></div><div class="colrow"><span class="tag tag-util">ÚTIL</span><b>Saldo Total</b><span class="ex">ex.: 2170205.37</span></div>
+</div>
+
+</div></body></html>

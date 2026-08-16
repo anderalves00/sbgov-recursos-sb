@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SBGov — Estrutura — Portal FNS</title>
+<style>
+:root{
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#F6F7F5; --surface:#FFFFFF; --ink:#223032; --muted:#5F6F6D; --border:#DDE4E1;
+  --accent:#0E7C6B; --accent-fill:#E3F0EC; --amber:#A87721;
+  --chip-num-bg:#E9F2EE; --chip-num-ink:#0E7C6B;
+  --chip-date-bg:#F5EDDC; --chip-date-ink:#8A6318;
+  --chip-text-bg:#EDEFEE; --chip-text-ink:#5F6F6D;
+  --note-bg:#FFF8E6; --note-ink:#6B5312;
+  --e-indicacao:#8A6318; --e-hub:#0E7C6B; --e-financeiro:#3A6EA5; --e-emenda:#7A5AA8;
+  --e-obra:#B4574B; --e-equipamento:#2E7D57; --e-conta:#3A6EA5; --e-recorrente:#A87721; --e-fora:#8A8F8D;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111B1D; --surface:#182426; --ink:#D9E3E0; --muted:#8AA09C; --border:#2A3A3C;
+  --accent:#46B49C; --accent-fill:#1D3330; --amber:#C99A45;
+  --chip-num-bg:#17302A; --chip-num-ink:#46B49C;
+  --chip-date-bg:#332B18; --chip-date-ink:#C99A45;
+  --chip-text-bg:#1F2A2B; --chip-text-ink:#8AA09C;
+  --note-bg:#2A2413; --note-ink:#D8C48A;
+  --e-indicacao:#C99A45; --e-hub:#46B49C; --e-financeiro:#7FB0E0; --e-emenda:#A98BD4;
+  --e-obra:#DE8578; --e-equipamento:#5FB98C; --e-conta:#7FB0E0; --e-recorrente:#C99A45; --e-fora:#7A8482;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111B1D; --surface:#182426; --ink:#D9E3E0; --muted:#8AA09C; --border:#2A3A3C;
+  --accent:#46B49C; --accent-fill:#1D3330; --amber:#C99A45;
+  --chip-num-bg:#17302A; --chip-num-ink:#46B49C;
+  --chip-date-bg:#332B18; --chip-date-ink:#C99A45;
+  --chip-text-bg:#1F2A2B; --chip-text-ink:#8AA09C;
+  --note-bg:#2A2413; --note-ink:#D8C48A;
+  --e-indicacao:#C99A45; --e-hub:#46B49C; --e-financeiro:#7FB0E0; --e-emenda:#A98BD4;
+  --e-obra:#DE8578; --e-equipamento:#5FB98C; --e-conta:#7FB0E0; --e-recorrente:#C99A45; --e-fora:#7A8482;
+}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+.page{max-width:1500px;margin:0 auto;padding:28px 20px 80px}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.7rem;color:var(--accent);font-weight:600}
+h1{margin:.25rem 0 .4rem;font-size:1.75rem;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:80ch;margin-bottom:18px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 26px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:130px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;font-size:.8rem}
+.lg-line{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.diagram-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:30px}
+.diagram-scroll{overflow-x:auto;position:relative}
+#map{position:relative;min-width:1180px}
+#edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.faixas{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;position:relative;z-index:1}
+.faixa-tit{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+  border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:12px}
+.node{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--ec);
+  border-radius:9px;padding:9px 11px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.node:hover{border-color:var(--ec);transform:translateY(-1px)}
+.node.hub{border-width:2px;border-left-width:6px;box-shadow:0 2px 10px rgba(14,124,107,.14)}
+.node.off{opacity:.22}
+.node-name{font:600 .82rem/1.3 var(--mono);word-break:break-all}
+.node-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.pill{font-size:.65rem;padding:1px 6px;border-radius:20px;background:var(--chip-text-bg);color:var(--chip-text-ink)}
+.pill.reg{background:var(--accent-fill);color:var(--accent);font-variant-numeric:tabular-nums}
+.pill.emb{background:var(--note-bg);color:var(--note-ink)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.search{flex:1;min-width:240px;padding:9px 12px;border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);color:var(--ink);font:inherit}
+.btn{padding:8px 13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--muted);font:inherit;cursor:pointer}
+.btn.on{background:var(--accent-fill);color:var(--accent);border-color:var(--accent)}
+.cards{display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--ec);
+  border-radius:13px;overflow:hidden;scroll-margin-top:14px}
+.card.hid{display:none}
+.card-head{padding:15px 18px;border-bottom:1px solid var(--border)}
+.card-head h2{margin:0 0 5px;font:600 1rem/1.3 var(--mono);word-break:break-all}
+.desc-oficial{color:var(--muted);font-size:.87rem;margin-bottom:9px}
+.meta-row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.colwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th{text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--surface)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,transparent)}
+.col-name{font-family:var(--mono);font-weight:600;white-space:nowrap}
+.tchip{font-size:.63rem;padding:1px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap}
+.tchip.num{background:var(--chip-num-bg);color:var(--chip-num-ink)}
+.tchip.date{background:var(--chip-date-bg);color:var(--chip-date-ink)}
+.tchip.text{background:var(--chip-text-bg);color:var(--chip-text-ink)}
+.flag{font-size:.63rem;font-family:var(--mono);padding:1px 5px;border-radius:5px;
+  background:var(--accent-fill);color:var(--accent);white-space:nowrap}
+.flag.fk{background:var(--chip-date-bg);color:var(--chip-date-ink)}
+.col-desc{color:var(--muted);min-width:230px;max-width:430px}
+.col-ex{font-family:var(--mono);font-size:.74rem;max-width:270px;word-break:break-word}
+.dom{display:block;color:var(--muted);font-size:.68rem;margin-top:3px}
+.note{background:var(--note-bg);color:var(--note-ink);border-radius:10px;padding:12px 15px;
+  margin:16px 0;font-size:.85rem}
+.note b{display:block;margin-bottom:3px}
+</style></head><body><div class="page">
+
+<div class="eyebrow">SBGov · Portal FNS · Modo Estrutura</div>
+<h1>Estrutura da Base Portal FNS</h1>
+<div class="sub">Fundo Nacional de Saúde — Ministério da Saúde. 30 planilhas exportadas
+manualmente (sem API), dois mundos de identificador que não se cruzam (FAF de 17 dígitos ×
+SIAFI de 6) e recorrentes agregados de 5.866 lançamentos sem proposta. <b>21 planilhas no
+escopo do Nível 1</b>; as descartadas/fora da carteira aparecem sinalizadas, não escondidas.</div>
+
+<div class="stats">
+  <div class="stat"><b>204</b><span>hub</span></div>
+  <div class="stat"><b>679</b><span>recorrentes</span></div>
+  <div class="stat"><b>6</b><span>obras órfãs</span></div>
+  <div class="stat"><b>889</b><span>total nível 1</span></div>
+  <div class="stat"><b>572.514.974,08</b><span>valor do hub (R$)</span></div>
+  <div class="stat"><b>2,673</b><span>itens de equipamento</span></div>
+</div>
+
+<div class="legend">
+<div class="lg-line"><span class="dot" style="background:var(--e-indicacao)"></span>Indicação parlamentar</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-hub)"></span>O recurso</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-financeiro)"></span>Empenho e repasse</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-emenda)"></span>Detalhe da emenda</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-obra)"></span>Obra (Sismob)</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-equipamento)"></span>Equipamento</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-conta)"></span>Conta bancária</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-recorrente)"></span>Recorrente</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-fora)"></span>Fora da carteira / descartado</div>
+<div class="lg-line"><span class="dot" style="background:var(--amber)"></span>relação inferida (prova por valor+data, não por chave declarada)</div>
+</div>
+<div class="diagram-panel"><div class="diagram-scroll"><div id="map">
+<svg id="edges"></svg><div class="faixas">
+<div class="faixa" data-faixa="0"><div class="faixa-tit">Indicação parlamentar</div>
+<div class="node" id="n-emendas_indicacao_atual" data-id="emendas_indicacao_atual" style="--ec:var(--e-indicacao)" title="A camada antes da proposta: o parlamentar reserva um valor no orcamento do ano corrente. 2 das 13 ainda nao viraram instrumento -- essas 2 viram recurso novo (fora do escopo desta extracao, vinculo nao fechado)."><div class="node-name">emendas_indicacao_atual</div><div class="node-badges"><span class="pill">9 col.</span><span class="pill reg">13 reg.</span></div></div>
+<div class="node" id="n-emendas_auto_comissao" data-id="emendas_auto_comissao" style="--ec:var(--e-indicacao)" title="Satelite da indicacao atual: rateio por parlamentar dentro das emendas de comissao. So existe para o ano corrente -- nao sobrevive a virada do ano."><div class="node-name">emendas_auto_comissao</div><div class="node-badges"><span class="pill">6 col.</span><span class="pill reg">8 reg.</span></div></div>
+<div class="node" id="n-emendas_indicacao_anterior" data-id="emendas_indicacao_anterior" style="--ec:var(--e-indicacao)" title="Historico de indicacao 2014-2025 -- contexto/hover, nao gera recurso novo. 9 das 99 antigas nunca viraram instrumento nesta base; 2 formalizaram por outro caminho (Discricionarias), 7 seguem sem explicacao."><div class="node-name">emendas_indicacao_anterior</div><div class="node-badges"><span class="pill">9 col.</span><span class="pill reg">100 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="1"><div class="faixa-tit">O recurso</div>
+<div class="node hub" id="n-hub_instrumentos" data-id="hub_instrumentos" style="--ec:var(--e-hub)" title="O recurso. Cada linha e uma Proposta FAF (17 digitos) ou um Convenio/Contrato/Termo SIAFI (6 digitos) -- os dois mundos nao compartilham identificador, so convivem aqui."><div class="node-name">hub_instrumentos</div><div class="node-badges"><span class="pill">18 col.</span><span class="pill reg">204 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="2"><div class="faixa-tit">Satélite direta</div>
+<div class="node" id="n-notas_empenho" data-id="notas_empenho" style="--ec:var(--e-financeiro)" title="Satelite direta do hub. Chave composta numa unica celula: &#x27;proposta / ano --- portaria&#x27;. Quando a proposta falta, o elo e so a portaria."><div class="node-name">notas_empenho</div><div class="node-badges"><span class="pill">4 col.</span><span class="pill reg">241 reg.</span></div></div>
+<div class="node" id="n-ordens_bancarias" data-id="ordens_bancarias" style="--ec:var(--e-financeiro)" title="Satelite direta do hub. So a proposta (sem ano/portaria); instrumento sem proposta grava &#x27;-&#x27; -- sao as 16 orfas."><div class="node-name">ordens_bancarias</div><div class="node-badges"><span class="pill">4 col.</span><span class="pill reg">235 reg.</span></div></div>
+<div class="node" id="n-emendas_tabela_instrumentos" data-id="emendas_tabela_instrumentos" style="--ec:var(--e-emenda)" title="Satelite direta do hub para os recursos de emenda: 121 linhas cobrem 114 propostas distintas (6 instrumentos de comissao/bancada tem mais de 1 linha). 7 propostas EMENDA de 1999-2012 nao aparecem aqui -- lacuna de cobertura nos anos antigos, nao erro."><div class="node-name">emendas_tabela_instrumentos</div><div class="node-badges"><span class="pill">20 col.</span><span class="pill reg">121 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="3"><div class="faixa-tit">Detalhe por grupo</div>
+<div class="node" id="n-obras_info_gerais" data-id="obras_info_gerais" style="--ec:var(--e-obra)" title="O Sismob: 37 obras ligadas a proposta do hub + 6 orfas (proposta de 20 digitos, vinculo provado por valor+data+OB agregada na FundoFundo). Unica fonte que revela devolucao de recurso."><div class="node-name">obras_info_gerais</div><div class="node-badges"><span class="pill">11 col.</span><span class="pill reg">43 reg.</span></div></div>
+<div class="node" id="n-obras_datas_valores" data-id="obras_datas_valores" style="--ec:var(--e-obra)" title="Data e OB de cada parcela -- o valor vem da 01.00, nunca daqui (achado 33). Repasse = campos das duas planilhas combinados."><div class="node-name">obras_datas_valores</div><div class="node-badges"><span class="pill">3 col.</span><span class="pill reg">43 reg.</span></div></div>
+<div class="node" id="n-obras_ciclo_datas" data-id="obras_ciclo_datas" style="--ec:var(--e-obra)" title="8 das 9 colunas de data sao ganho liquido (nao existem em nenhuma outra planilha): cadastro, inicio de projeto, inicio de obra, conclusao, inauguracao, inicio de funcionamento, ultimo monitoramento, ultimo pagamento."><div class="node-name">obras_ciclo_datas</div><div class="node-badges"><span class="pill">3 col.</span><span class="pill reg">43 reg.</span></div></div>
+<div class="node" id="n-equipamentos" data-id="equipamentos" style="--ec:var(--e-equipamento)" title="Detalhe de 30 propostas do hub (objeto &#x27;Aquisicao de Equipamento e Material Permanente&#x27;). O dinheiro vem do Fundo de Saude; o CNPJ desta planilha e sempre da Prefeitura -- o bem fisico entra no patrimonio dela, nao do Fundo."><div class="node-name">equipamentos</div><div class="node-badges"><span class="pill">8 col.</span><span class="pill reg">2.673 reg.</span></div></div>
+<div class="node" id="n-regularizacao_contas" data-id="regularizacao_contas" style="--ec:var(--e-conta)" title="Historico de conta bancaria -- sai do nucleo do recurso (decisao de 13/08): conta nao e 1:1, a mesma proposta aparece 2x com contas diferentes para emendas diferentes. Vira TipoDetalhe=conta na lista Detalhe."><div class="node-name">regularizacao_contas</div><div class="node-badges"><span class="pill">7 col.</span><span class="pill reg">40 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="4"><div class="faixa-tit">Recorrente / fora da carteira</div>
+<div class="node" id="n-fundofundo_recorrentes" data-id="fundofundo_recorrentes" style="--ec:var(--e-recorrente)" title="6.066 lancamentos: 200 com proposta (ja no hub) + 5.866 sem proposta. 5 dessas linhas pagam as 6 obras orfas (excluidas antes de agregar); as 5.861 restantes agregam por PROGRAMA(normalizado)+ANO+CNPJ em 679 recursos RECORRENTE."><div class="node-name">fundofundo_recorrentes</div><div class="node-badges"><span class="pill">9 col.</span><span class="pill reg">6.066 reg.</span></div></div>
+<div class="node" id="n-planejamento_fora_carteira" data-id="planejamento_fora_carteira" style="--ec:var(--e-fora)" title="FORA DA CARTEIRA -- decisao do usuario. Nao e recurso (sem PROPOSTA/EMENDA/CNPJ especifico, sem valor): e condicao de elegibilidade do municipio para continuar recebendo Fundo a Fundo. 20/21 aprovados; RAG 2026 ainda nao iniciado (esperado)."><div class="node-name">planejamento_fora_carteira</div><div class="node-badges"><span class="pill">2 col.</span><span class="pill reg">21 reg.</span></div></div>
+<div class="node" id="n-monitoramento_descartado" data-id="monitoramento_descartado" style="--ec:var(--e-fora)" title="DESCARTADO -- decisao do usuario, 13/08. Mesmos 28 instrumentos do hub fatiados em colunas; unico dado novo (Saldo R$) e 0,24% do repassado e e a informacao mais volatil do projeto (foto de um dia). Estudado por inteiro antes de descartar."><div class="node-name">monitoramento_descartado</div><div class="node-badges"><span class="pill">0 col.</span><span class="pill emb">sem contagem própria</span></div></div>
+<div class="node" id="n-transferegov_descartado" data-id="transferegov_descartado" style="--ec:var(--e-fora)" title="DESCARTADO -- redundante com a Base Discricionárias, 8/8 tabelas batendo linha a linha (Instrumento = NR_CONVENIO em 11/11)."><div class="node-name">transferegov_descartado</div><div class="node-badges"><span class="pill">0 col.</span><span class="pill emb">sem contagem própria</span></div></div>
+</div>
+</div></div></div></div>
+<div class="note"><b>Como ler o mapa</b>
+Da esquerda para a direita é o caminho do dinheiro: a indicação parlamentar reserva o valor no
+orçamento; a proposta formaliza o pedido ao Fundo Nacional de Saúde — é o hub, o recurso; o resto
+detalha esse recurso (financeiro, emenda, obra, equipamento, conta). A última faixa reúne o que
+não é pedido individual — o recorrente (repasse mensal sem proposta) e o que foi estudado e ficou
+fora da carteira. Clique em qualquer planilha para ir ao seu dicionário completo.</div>
+
+<div class="toolbar">
+  <input class="search" id="q" placeholder="Buscar planilha, coluna ou descrição… (ex.: cnpj, valor, obra, emenda)">
+  <button class="btn on" data-eixo="*">Todos</button>
+<button class="btn" data-eixo="indicacao">Indicação parlamentar</button>
+<button class="btn" data-eixo="hub">O recurso</button>
+<button class="btn" data-eixo="financeiro">Empenho e repasse</button>
+<button class="btn" data-eixo="emenda">Detalhe da emenda</button>
+<button class="btn" data-eixo="obra">Obra (Sismob)</button>
+<button class="btn" data-eixo="equipamento">Equipamento</button>
+<button class="btn" data-eixo="conta">Conta bancária</button>
+<button class="btn" data-eixo="recorrente">Recorrente</button>
+<button class="btn" data-eixo="fora">Fora da carteira / descartado</button>
+</div><div class="cards" id="cards">
+<section class="card" id="c-hub_instrumentos" data-eixo="hub" style="--ec:var(--e-hub)">
+<div class="card-head">
+<h2>hub_instrumentos</h2>
+<div class="desc-oficial">O recurso. Cada linha e uma Proposta FAF (17 digitos) ou um Convenio/Contrato/Termo SIAFI (6 digitos) -- os dois mundos nao compartilham identificador, so convivem aqui.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">O recurso</span>
+<span class="pill">18 colunas</span>
+<span class="pill reg">204 registros</span>
+<span class="pill emb">InstrumentosInvestimento</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">PROPOSTA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">PK</span></td><td class="col-desc">Identificador nativo FAF, 17 digitos. &#x27;-&#x27; em 6 linhas SIAFI sem proposta -- usar PORTARIA OU CONVENIO como chave nesse caso.</td><td class="col-ex">13961905000126001</td></tr>
+<tr><td class="col-name">PORTARIA OU CONVÊNIO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">PK~</span></td><td class="col-desc">Polimorfica: 6 digitos = convenio SIAFI (22 linhas); 1-5 digitos ou nnnn/aaaa = portaria FAF (182 linhas).</td><td class="col-ex">11736</td></tr>
+<tr><td class="col-name">DATA PORTARIA</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc">Data da portaria/convenio.</td><td class="col-ex">2026-06-29 00:00:00</td></tr>
+<tr><td class="col-name">UF</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Constante SP.</td><td class="col-ex">SP<span class="dom">SP (204)</span></td></tr>
+<tr><td class="col-name">MUNICIPIO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Constante SAO BERNARDO DO CAMPO.</td><td class="col-ex">SAO BERNARDO DO CAMPO<span class="dom">SAO BERNARDO DO CAMPO (193) · SÃO BERNARDO DO CAMPO (11)</span></td></tr>
+<tr><td class="col-name">CÓD. IBGE</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Constante 354870 -- sem digito verificador.</td><td class="col-ex">354870<span class="dom">354870 (204)</span></td></tr>
+<tr><td class="col-name">ENTIDADE</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Fundo Municipal de Saude ou Municipio/Prefeitura -- 1:1 com CNPJ.</td><td class="col-ex">FUNDO MUNICIPAL DE SAUDE<span class="dom">FUNDO MUNICIPAL DE SAUDE (162) · MUNICIPIO DE SAO BERNARD… (42)</span></td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">13961905000170 (Fundo) ou 46523239000147 (Prefeitura).</td><td class="col-ex">13961905000170<span class="dom">13961905000170 (162) · 46523239000147 (42)</span></td></tr>
+<tr><td class="col-name">OBJETO</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">Descricao do que o recurso financia. Lacuna historica em parte dos registros antigos.</td><td class="col-ex">AQUISIÇÃO DE EQUIPAMENTO E MATERIAL PERMANENTE</td></tr>
+<tr><td class="col-name">ANO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Ano do pedido -- nao deriva de DATA PORTARIA.</td><td class="col-ex">2026</td></tr>
+<tr><td class="col-name">MODALIDADE TRANSF.</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">FAF / Convenio / Contrato de Repasse / Termo de Compromisso -- vira RecursoFormalizacao.</td><td class="col-ex">FAF<span class="dom">FAF (182) · CONVENIO (13) · CONTRATO DE REPASSE (8) · TERMO DE COMPROMISSO (1)</span></td></tr>
+<tr><td class="col-name">ESFERA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Constante MUNICIPAL.</td><td class="col-ex">MUNICIPAL<span class="dom">MUNICIPAL (198)</span></td></tr>
+<tr><td class="col-name">NAT. JURIDICA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Natureza juridica do beneficiario.</td><td class="col-ex">FUNDO PUBLICO DA ADMINISTRACAO DIRETA MUNICIPAL<span class="dom">FUNDO PUBLICO DA ADMINIS… (156) · MUNICIPIO (37) · Administração Pública Mu… (11)</span></td></tr>
+<tr><td class="col-name">RECURSO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">EMENDA (121) / PROGRAMA (77) / NORMAL (6) -- origem da destinacao.</td><td class="col-ex">EMENDA<span class="dom">EMENDA (121) · PROGRAMA (77) · NORMAL (6)</span></td></tr>
+<tr><td class="col-name">ACAO</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">Codigo orcamentario. Ler sempre como texto -- engines padrao confundem com notacao cientifica.</td><td class="col-ex">8535</td></tr>
+<tr><td class="col-name">VL PROPOSTA</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">-&gt; ValorTotalRecurso_VGov. Valor global, com contrapartida e rendimento dentro.</td><td class="col-ex">1359548</td></tr>
+<tr><td class="col-name">VL EMPENHADO</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">-&gt; ValorEmpenhado_VGov. Provado contra a soma das notas de empenho (167/168).</td><td class="col-ex">1359548</td></tr>
+<tr><td class="col-name">VL PAGO</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">-&gt; ValorLiberado_VGov. Repasse do governo, nao pagamento a fornecedor. Provado contra ordens bancarias (156/156).</td><td class="col-ex">0</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-notas_empenho" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>notas_empenho</h2>
+<div class="desc-oficial">Satelite direta do hub. Chave composta numa unica celula: &#x27;proposta / ano --- portaria&#x27;. Quando a proposta falta, o elo e so a portaria.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Empenho e repasse</span>
+<span class="pill">4 colunas</span>
+<span class="pill reg">241 registros</span>
+<span class="pill emb">InstrumentosInvestimento</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">PROPOSTA/ANO &amp; SIAFI ou PORTARIA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→hub_instrumentos</span></td><td class="col-desc">Chave composta. Casar por proposta perde 22/241 -- a portaria e o elo alternativo.</td><td class="col-ex">63000772444202600 / 2026 --- 11853</td></tr>
+<tr><td class="col-name">EMPENHO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Numero da nota de empenho.</td><td class="col-ex">2570012026NE504401</td></tr>
+<tr><td class="col-name">DATA EMPENHO</td><td><span class="tchip date">date</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">2026-07-03 00:00:00</td></tr>
+<tr><td class="col-name">VL EMPENHO</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Soma reproduz VL EMPENHADO do hub em 167/168 instrumentos cobertos. 36 instrumentos FAF de 2009-2013 nao tem nenhuma nota -- ausencia da planilha, nao do fato.</td><td class="col-ex">7500000</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-ordens_bancarias" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>ordens_bancarias</h2>
+<div class="desc-oficial">Satelite direta do hub. So a proposta (sem ano/portaria); instrumento sem proposta grava &#x27;-&#x27; -- sao as 16 orfas.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Empenho e repasse</span>
+<span class="pill">4 colunas</span>
+<span class="pill reg">235 registros</span>
+<span class="pill emb">InstrumentosInvestimento</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">PROPOSTA/ANO &amp; SIAFI ou PORTARIA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→hub_instrumentos</span></td><td class="col-desc">So a proposta. 16 linhas com &#x27;-&#x27; (sem proposta) somam ao centavo o VL PAGO dos 6 instrumentos SIAFI sem proposta.</td><td class="col-ex">63000772444202600</td></tr>
+<tr><td class="col-name">OB</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Numero da ordem bancaria.</td><td class="col-ex">2570012026OB063084</td></tr>
+<tr><td class="col-name">DATA OB</td><td><span class="tchip date">date</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">2026-07-06 00:00:00</td></tr>
+<tr><td class="col-name">VL OB</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Soma reproduz VL PAGO do hub em 156/156 instrumentos cobertos.</td><td class="col-ex">15000000</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-emendas_indicacao_atual" data-eixo="indicacao" style="--ec:var(--e-indicacao)">
+<div class="card-head">
+<h2>emendas_indicacao_atual</h2>
+<div class="desc-oficial">A camada antes da proposta: o parlamentar reserva um valor no orcamento do ano corrente. 2 das 13 ainda nao viraram instrumento -- essas 2 viram recurso novo (fora do escopo desta extracao, vinculo nao fechado).</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Indicação parlamentar</span>
+<span class="pill">9 colunas</span>
+<span class="pill reg">13 registros</span>
+<span class="pill emb">Emendas</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Nº Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">8 digitos: ano(4)+parlamentar(4)+sequencial(4)... ver regra dos 3 formatos do CLAUDE.md.</td><td class="col-ex">30370001</td></tr>
+<tr><td class="col-name">Parlamentar</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">Alex Manente</td></tr>
+<tr><td class="col-name">Partido</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">CIDADANIA</td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Sempre o Fundo Municipal de Saude nesta planilha.</td><td class="col-ex">13961905000170<span class="dom">13961905000170 (13)</span></td></tr>
+<tr><td class="col-name">Beneficiário</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">FUNDO MUNICIPAL DE SAUDE<span class="dom">FUNDO MUNICIPAL DE SAUDE (13)</span></td></tr>
+<tr><td class="col-name">GND</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Custeio ou Investimento.</td><td class="col-ex">Custeio<span class="dom">Custeio (11) · Investimento (2)</span></td></tr>
+<tr><td class="col-name">Ação</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Codigo orcamentario -- ler como texto (achado: engine padrao le como notacao cientifica).</td><td class="col-ex">2E89<span class="dom">2E90 (8) · 2E89 (3) · 8535 (1) · 8581 (1)</span></td></tr>
+<tr><td class="col-name">PTRES</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">264740</td></tr>
+<tr><td class="col-name">Indicação  (R$)</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Valor reservado antes de virar proposta. Nunca visto crescer no caminho ate a proposta formalizada.</td><td class="col-ex">5000000</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-emendas_auto_comissao" data-eixo="indicacao" style="--ec:var(--e-indicacao)">
+<div class="card-head">
+<h2>emendas_auto_comissao</h2>
+<div class="desc-oficial">Satelite da indicacao atual: rateio por parlamentar dentro das emendas de comissao. So existe para o ano corrente -- nao sobrevive a virada do ano.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Indicação parlamentar</span>
+<span class="pill">6 colunas</span>
+<span class="pill reg">8 registros</span>
+<span class="pill emb">Emendas</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Tipo de Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">Comissão<span class="dom">Comissão (8)</span></td></tr>
+<tr><td class="col-name">Nº Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→emendas_indicacao_atual</span></td><td class="col-desc"></td><td class="col-ex">50410001<span class="dom">50410001 (4) · 50410003 (2) · 50410002 (1) · 50410004 (1)</span></td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">13961905000170<span class="dom">13961905000170 (8)</span></td></tr>
+<tr><td class="col-name">Parlamentar (Participante da Indicação de Comissão)</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">ALEX MANENTE<span class="dom">RENATA ABREU (2) · DELEGADO BRUNO LIMA (2) · ALEX MANENTE (1) · DAVID SOARES (1) · MARCOS PEREIRA (1) · PAULO PEREIRA DA SILVA (1)</span></td></tr>
+<tr><td class="col-name">Indicação Detalhe (R$)</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Fatia do valor total da emenda atribuida a este parlamentar da comissao.</td><td class="col-ex">5000000</td></tr>
+<tr><td class="col-name">Tipo de Operação</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">ADIÇÃO em 8/8 -- nao ha subtracao registrada nesta base.</td><td class="col-ex">ADIÇÃO<span class="dom">ADIÇÃO (8)</span></td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-emendas_indicacao_anterior" data-eixo="indicacao" style="--ec:var(--e-indicacao)">
+<div class="card-head">
+<h2>emendas_indicacao_anterior</h2>
+<div class="desc-oficial">Historico de indicacao 2014-2025 -- contexto/hover, nao gera recurso novo. 9 das 99 antigas nunca viraram instrumento nesta base; 2 formalizaram por outro caminho (Discricionarias), 7 seguem sem explicacao.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Indicação parlamentar</span>
+<span class="pill">9 colunas</span>
+<span class="pill reg">100 registros</span>
+<span class="pill emb">Emendas</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Ano Exercício</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">2025</td></tr>
+<tr><td class="col-name">Número Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">30370003</td></tr>
+<tr><td class="col-name">Parlamentar</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">ALEX MANENTE</td></tr>
+<tr><td class="col-name">Tipo de Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">Individual<span class="dom">Individual (88) · Relatoria (6) · Comissao (4) · Bancada Obrigatória (2)</span></td></tr>
+<tr><td class="col-name">Modalidade</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Fundo a Fundo (Municipios) predominante -- 1 caso rotulado Estados/DF mesmo com entidade municipal (peculiaridade do rotulo orcamentario).</td><td class="col-ex">Transferências a Municípios -  Fundo a Fundo<span class="dom">Transferências a Municíp… (99) · Transferências a Estados… (1)</span></td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">13961905000170<span class="dom">13961905000170 (100)</span></td></tr>
+<tr><td class="col-name">Entidade</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">FUNDO MUNICIPAL DE SAUDE<span class="dom">FUNDO MUNICIPAL DE SAUDE (100)</span></td></tr>
+<tr><td class="col-name">Indicação (R$)</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">3100000</td></tr>
+<tr><td class="col-name">Indicação com Proposta Cadastrada?</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">7 dizem &#x27;sim&#x27; sem instrumento em lugar nenhum das 7 bases do projeto.</td><td class="col-ex">SIM<span class="dom">SIM (97) · NAO (3)</span></td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-emendas_tabela_instrumentos" data-eixo="emenda" style="--ec:var(--e-emenda)">
+<div class="card-head">
+<h2>emendas_tabela_instrumentos</h2>
+<div class="desc-oficial">Satelite direta do hub para os recursos de emenda: 121 linhas cobrem 114 propostas distintas (6 instrumentos de comissao/bancada tem mais de 1 linha). 7 propostas EMENDA de 1999-2012 nao aparecem aqui -- lacuna de cobertura nos anos antigos, nao erro.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Detalhe da emenda</span>
+<span class="pill">20 colunas</span>
+<span class="pill reg">121 registros</span>
+<span class="pill emb">Emendas</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Ano</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">2026</td></tr>
+<tr><td class="col-name">N° Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Usa &#x27;°&#x27; (grau) nesta planilha -- &#x27;º&#x27; (ordinal) em 01.00/01.01. Mesma etiqueta, caractere Unicode diferente.</td><td class="col-ex">41550001</td></tr>
+<tr><td class="col-name">Partido</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">UNIÃO</td></tr>
+<tr><td class="col-name">Parlamentar</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">KIM KATAGUIRI</td></tr>
+<tr><td class="col-name">Tipo de Emenda</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Individual / Relatoria / Comissao / Bancada Obrigatoria.</td><td class="col-ex">INDIVIDUAL<span class="dom">INDIVIDUAL (95) · COMISSAO (18) · RELATORIA (5) · BANCADA OBRIGATÓRIA (3)</span></td></tr>
+<tr><td class="col-name">Grupo de Despesa</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">CORRENTE<span class="dom">CORRENTE (96) · CAPITAL (25)</span></td></tr>
+<tr><td class="col-name">N° Instrumento</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→hub_instrumentos.PROPOSTA</span></td><td class="col-desc">= PROPOSTA do hub. Chave da satelite.</td><td class="col-ex">36000796295202600</td></tr>
+<tr><td class="col-name">TGov Parceria</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→BaseTgovParcerias.cd_parceria</span></td><td class="col-desc">= cd_parceria da Base Parcerias em 35/35 casos -- ponte entre as duas bases (nao a FundoFundo, apesar do nome).</td><td class="col-ex">202600023966</td></tr>
+<tr><td class="col-name">Tipo de Repasse</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">FAF<span class="dom">FAF (119) · CONTRATO DE REPASSE (2)</span></td></tr>
+<tr><td class="col-name">Tipo de Instrumento</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">INCREMENTO MAC<span class="dom">INCREMENTO MAC (68) · INCREMENTO PAP (25) · EQUIPAMENTO (25) · CONVÊNIO OBRA (2) · UBSREFORMA (1)</span></td></tr>
+<tr><td class="col-name">Ação Orç.</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc"></td><td class="col-ex">2E90<span class="dom">2E90 (62) · 2E89 (21) · 8581 (17) · 8535 (11) · 4525 (10)</span></td></tr>
+<tr><td class="col-name">Programa Estratégico</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc"></td><td class="col-ex">ATENÇÃO ESPECIALIZADA À SAÚDE</td></tr>
+<tr><td class="col-name">Componente</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc"></td><td class="col-ex">INCREMENTO TEMPORÁRIO DO TETO DA MÉDIA E ALTA CO…</td></tr>
+<tr><td class="col-name">Nr. Portaria</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc"></td><td class="col-ex">10973</td></tr>
+<tr><td class="col-name">Data Portaria</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc"></td><td class="col-ex">2026-04-30 00:00:00</td></tr>
+<tr><td class="col-name">Situação (Portal FNS)</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">-&gt; SituacaoProposta_VGov.</td><td class="col-ex">EM ANALISE PELA ÁREA FINALÍSTICA<span class="dom">PROPOSTA PAGA (115) · EM ANALISE PELA ÁREA FIN… (6)</span></td></tr>
+<tr><td class="col-name">Situação (DS PROPOSTA)</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">Segunda coluna de situacao -- resolvida no bloco 3 do Dicionario.</td><td class="col-ex">Proposta Empenhada aguardando Formalização<span class="dom">Proposta Paga (115) · Proposta Empenhada aguar… (5) · Proposta de Obra concluí… (1)</span></td></tr>
+<tr><td class="col-name">Instrumento (R$)</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">Casa com VL PROPOSTA do hub.</td><td class="col-ex">500000</td></tr>
+<tr><td class="col-name">Empenhado (R$)</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc"></td><td class="col-ex">500000</td></tr>
+<tr><td class="col-name">Pago (R$)</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc"></td><td class="col-ex">0</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-obras_info_gerais" data-eixo="obra" style="--ec:var(--e-obra)">
+<div class="card-head">
+<h2>obras_info_gerais</h2>
+<div class="desc-oficial">O Sismob: 37 obras ligadas a proposta do hub + 6 orfas (proposta de 20 digitos, vinculo provado por valor+data+OB agregada na FundoFundo). Unica fonte que revela devolucao de recurso.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Obra (Sismob)</span>
+<span class="pill">11 colunas</span>
+<span class="pill reg">43 registros</span>
+<span class="pill emb">ObrasFundoFundo</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Número Proposta</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→hub_instrumentos.PROPOSTA (37/43)</span></td><td class="col-desc">6 com 20 digitos (CNPJ+ano+seq) nao existem no hub -- as obras orfas.</td><td class="col-ex">13961905000125003</td></tr>
+<tr><td class="col-name">Portaria</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">8206</td></tr>
+<tr><td class="col-name">Tipo Obra</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Construção / Reforma.</td><td class="col-ex">Construção<span class="dom">Construção (32) · Reforma (11)</span></td></tr>
+<tr><td class="col-name">Situação da Obra (MGI)</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">1a de 3 colunas de situacao -- as tres nao sao a mesma dimensao (achado 35).</td><td class="col-ex">Em execução<span class="dom">Concluída (26) · Cancelada (12) · Em execução (5)</span></td></tr>
+<tr><td class="col-name">Devolução de recurso</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Sim/Nao -- unico lugar do projeto que registra dinheiro devolvido ao governo.</td><td class="col-ex">Não<span class="dom">Não (34) · Sim (9)</span></td></tr>
+<tr><td class="col-name">Data Devolução</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc"></td><td class="col-ex">2019-05-20 11:40:48.600000<span class="dom">2019-05-20 11:40:48.6000… (1) · 2020-08-13 14:47:44.1110… (1) · 2020-08-13 14:40:21.0110… (1)</span></td></tr>
+<tr><td class="col-name">Latitude / Longitude</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">Coordenada da obra, nao do estabelecimento -- 40 obras, 40 coordenadas distintas.</td><td class="col-ex">-23.76981</td></tr>
+<tr><td class="col-name">CNES</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→InstrumentosInvestimento/01.03</span></td><td class="col-desc">Vinculo com o estabelecimento de saude.</td><td class="col-ex">2045427</td></tr>
+<tr><td class="col-name">Valor Instrumento</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Autorizado.</td><td class="col-ex">5214000</td></tr>
+<tr><td class="col-name">Valor Total Pago</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Liberado -- diverge de VL PAGO do hub em 1/37 (achado 34).</td><td class="col-ex">5214000</td></tr>
+<tr><td class="col-name">Valor Primeira/Segunda/Terceira Parcela SISMOB</td><td><span class="tchip num">num</span></td><td></td><td class="col-desc">Usar sempre esta coluna para valor de repasse -- a 01.01 grava 0 onde aqui grava &#x27;-&#x27; (achado 33).</td><td class="col-ex">(coluna combinada)</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-obras_datas_valores" data-eixo="obra" style="--ec:var(--e-obra)">
+<div class="card-head">
+<h2>obras_datas_valores</h2>
+<div class="desc-oficial">Data e OB de cada parcela -- o valor vem da 01.00, nunca daqui (achado 33). Repasse = campos das duas planilhas combinados.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Obra (Sismob)</span>
+<span class="pill">3 colunas</span>
+<span class="pill reg">43 registros</span>
+<span class="pill emb">ObrasFundoFundo</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Instrumento</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→obras_info_gerais</span></td><td class="col-desc"></td><td class="col-ex">46523239000109001</td></tr>
+<tr><td class="col-name">Data Pagamento Primeira/Segunda/Terceira Parcela</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc"></td><td class="col-ex">(coluna combinada)</td></tr>
+<tr><td class="col-name">Ordem bancária parcela 1/2/3</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">81 repasses no total; 4 tem par tambem na 01.02 do hub (marcar para nao duplicar na consolidacao).</td><td class="col-ex">(coluna combinada)</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-obras_ciclo_datas" data-eixo="obra" style="--ec:var(--e-obra)">
+<div class="card-head">
+<h2>obras_ciclo_datas</h2>
+<div class="desc-oficial">8 das 9 colunas de data sao ganho liquido (nao existem em nenhuma outra planilha): cadastro, inicio de projeto, inicio de obra, conclusao, inauguracao, inicio de funcionamento, ultimo monitoramento, ultimo pagamento.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Obra (Sismob)</span>
+<span class="pill">3 colunas</span>
+<span class="pill reg">43 registros</span>
+<span class="pill emb">ObrasFundoFundo</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Instrumento</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→obras_info_gerais</span></td><td class="col-desc"></td><td class="col-ex">13961905000113007</td></tr>
+<tr><td class="col-name">Situação Obra</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">2a de 3 colunas de situacao -- 26 &#x27;Concluida&#x27; se abrem em 15 em funcionamento + 11 concluidas.</td><td class="col-ex">Em funcionamento<span class="dom">Em funcionamento (15) · Obra concluída (11) · Obra cancelada (9) · Em início de execução (4) · Em cancelamento (3) · Em execução e conclusão (1)</span></td></tr>
+<tr><td class="col-name">Data Início Obra / Data Provável Conclusão / Data Inauguração / Data Início Funcionamento</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc"></td><td class="col-ex">2012-08-30 00:00:00<span class="dom">2012-08-30 00:00:00 (1) · 2013-11-05 00:00:00 (1) · 2012-07-24 00:00:00 (1) · 2013-11-07 00:00:00 (1)</span></td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-equipamentos" data-eixo="equipamento" style="--ec:var(--e-equipamento)">
+<div class="card-head">
+<h2>equipamentos</h2>
+<div class="desc-oficial">Detalhe de 30 propostas do hub (objeto &#x27;Aquisicao de Equipamento e Material Permanente&#x27;). O dinheiro vem do Fundo de Saude; o CNPJ desta planilha e sempre da Prefeitura -- o bem fisico entra no patrimonio dela, nao do Fundo.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Equipamento</span>
+<span class="pill">8 colunas</span>
+<span class="pill reg">2.673 registros</span>
+<span class="pill emb">EquipamentosMateriaisPermanentes</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">Proposta</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> <span class="flag fk">FK→hub_instrumentos</span></td><td class="col-desc"></td><td class="col-ex">13961905000115002</td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Sempre Prefeitura, mesmo quando o Fundo pediu o recurso -- achado de patrimonio.</td><td class="col-ex">46523239000147<span class="dom">46523239000147 (2673)</span></td></tr>
+<tr><td class="col-name">CNES- Estabelecimento</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→obras_info_gerais.CNES</span></td><td class="col-desc"></td><td class="col-ex">2037394</td></tr>
+<tr><td class="col-name">Ambiente</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">Comodo onde o item foi instalado.</td><td class="col-ex">Consultório Indiferenciado</td></tr>
+<tr><td class="col-name">Equipamento</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">2.673 itens, 213 tipos distintos apos normalizacao.</td><td class="col-ex">Ar Condicionado</td></tr>
+<tr><td class="col-name">Qtd. Itens</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">7</td></tr>
+<tr><td class="col-name">Valor Unitário</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">1000</td></tr>
+<tr><td class="col-name">Valor Total</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Soma R$ 37.218.579,00 -- 2019 sozinho concentra quase 70%, puxado pelo Hospital e Pronto Socorro Central.</td><td class="col-ex">7000</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-regularizacao_contas" data-eixo="conta" style="--ec:var(--e-conta)">
+<div class="card-head">
+<h2>regularizacao_contas</h2>
+<div class="desc-oficial">Historico de conta bancaria -- sai do nucleo do recurso (decisao de 13/08): conta nao e 1:1, a mesma proposta aparece 2x com contas diferentes para emendas diferentes. Vira TipoDetalhe=conta na lista Detalhe.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Conta bancária</span>
+<span class="pill">7 colunas</span>
+<span class="pill reg">40 registros</span>
+<span class="pill emb">RegularizacaoContas</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">PROPOSTA</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→hub_instrumentos (39/39 distintas)</span></td><td class="col-desc"></td><td class="col-ex">36000586509202400</td></tr>
+<tr><td class="col-name">EMENDA</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→emendas_tabela_instrumentos (24/24 distintas)</span></td><td class="col-desc">Sem ano -- resolvida sempre via PROPOSTA, nunca sozinha (7/24 sao ambiguas isoladas).</td><td class="col-ex">30370003</td></tr>
+<tr><td class="col-name">BANCO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Sempre CEF (com espaco a frente na fonte).</td><td class="col-ex">CEF<span class="dom">CEF (40)</span></td></tr>
+<tr><td class="col-name">AGENCIA C/ DV / CONTA C/ DV</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">0346-8<span class="dom">0346-8 (40)</span></td></tr>
+<tr><td class="col-name">NOVA CONTA (ALTERAÇÃO CEF)</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">Valor real em so 13/40 -- resto e &#x27;Nao informado pela CEF&#x27;, falha declarada da fonte.</td><td class="col-ex">5758503610</td></tr>
+<tr><td class="col-name">DATA ABERTURA</td><td><span class="tchip date">date</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Nunca usar para inferir o ano do recurso -- diverge do ano real em 1/40 (regra 10 do Padrao).</td><td class="col-ex">2024-12-26 00:00:00</td></tr>
+<tr><td class="col-name">STATUS</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">REGULARIZADA em 100% das 40 linhas.</td><td class="col-ex">REGULARIZADA<span class="dom">REGULARIZADA (40)</span></td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-fundofundo_recorrentes" data-eixo="recorrente" style="--ec:var(--e-recorrente)">
+<div class="card-head">
+<h2>fundofundo_recorrentes</h2>
+<div class="desc-oficial">6.066 lancamentos: 200 com proposta (ja no hub) + 5.866 sem proposta. 5 dessas linhas pagam as 6 obras orfas (excluidas antes de agregar); as 5.861 restantes agregam por PROGRAMA(normalizado)+ANO+CNPJ em 679 recursos RECORRENTE.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Recorrente</span>
+<span class="pill">9 colunas</span>
+<span class="pill reg">6.066 registros</span>
+<span class="pill emb">FundoFundo</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">NU_PROCESSO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc"></td><td class="col-ex">25000116633202615</td></tr>
+<tr><td class="col-name">NU_PORTARIA</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc"></td><td class="col-ex">00006</td></tr>
+<tr><td class="col-name">ANO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Parte da chave de agregacao dos recorrentes.</td><td class="col-ex">2026</td></tr>
+<tr><td class="col-name">BLOCO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">3 programas aparecem em mais de 1 BLOCO -- nao usado na chave por isso.</td><td class="col-ex">Manutenção Das Ações E Serviços Públicos De Saúd…</td></tr>
+<tr><td class="col-name">PROGRAMA</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">219 grafias -&gt; 213 apos normalizar (acento/espaco). Parte da chave de agregacao.</td><td class="col-ex">FAEC - NEFROLOGIA</td></tr>
+<tr><td class="col-name">NU_PROPOSTA</td><td><span class="tchip text">text</span></td><td><span class="flag fk">FK→hub_instrumentos (200/6066)</span></td><td class="col-desc">&#x27;-&#x27; em 5.866 linhas = recorrente, sem pedido formal.</td><td class="col-ex">63000775526202600</td></tr>
+<tr><td class="col-name">CNPJ</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Parte da chave de agregacao.</td><td class="col-ex">13961905000170<span class="dom">13961905000170 (6066)</span></td></tr>
+<tr><td class="col-name">NU_OB</td><td><span class="tchip text">text</span></td><td></td><td class="col-desc">5 valores especificos (837848, 838886, 827461, 824833, 809700) sao as ordens bancarias que pagam as 6 obras orfas -- excluidos da agregacao para nao contar 2x.</td><td class="col-ex">066091</td></tr>
+<tr><td class="col-name">Valor Liquido</td><td><span class="tchip num">num</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Somado por grupo -&gt; ValorTotalRecurso_VGov de cada recorrente.</td><td class="col-ex">1415053.14</td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-planejamento_fora_carteira" data-eixo="fora" style="--ec:var(--e-fora)">
+<div class="card-head">
+<h2>planejamento_fora_carteira</h2>
+<div class="desc-oficial">FORA DA CARTEIRA -- decisao do usuario. Nao e recurso (sem PROPOSTA/EMENDA/CNPJ especifico, sem valor): e condicao de elegibilidade do municipio para continuar recebendo Fundo a Fundo. 20/21 aprovados; RAG 2026 ainda nao iniciado (esperado).</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Fora da carteira / descartado</span>
+<span class="pill">2 colunas</span>
+<span class="pill reg">21 registros</span>
+<span class="pill emb">InstrumentosPlanejamento</span>
+</div></div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">TIPO_INSTRUMENTO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Plano de Saude (3, por ciclo de 4 anos) / Programação Anual de Saúde (9) / RAG (9).</td><td class="col-ex">Plano de Saúde<span class="dom">Programação Anual de Saú… (9) · RAG (9) · Plano de Saúde (3)</span></td></tr>
+<tr><td class="col-name">SITUACAO</td><td><span class="tchip text">text</span></td><td><span class="flag">obrigatório</span> </td><td class="col-desc">Aprovado em 20/21.</td><td class="col-ex">Aprovado<span class="dom">Aprovado (20) · Não Iniciado (1)</span></td></tr>
+</tbody></table></div>
+</section>
+<section class="card" id="c-monitoramento_descartado" data-eixo="fora" style="--ec:var(--e-fora)">
+<div class="card-head">
+<h2>monitoramento_descartado</h2>
+<div class="desc-oficial">DESCARTADO -- decisao do usuario, 13/08. Mesmos 28 instrumentos do hub fatiados em colunas; unico dado novo (Saldo R$) e 0,24% do repassado e e a informacao mais volatil do projeto (foto de um dia). Estudado por inteiro antes de descartar.</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Fora da carteira / descartado</span>
+<span class="pill">0 colunas</span>
+<span class="pill emb">MonitoramentoInstrumentos</span>
+</div></div>
+</section>
+<section class="card" id="c-transferegov_descartado" data-eixo="fora" style="--ec:var(--e-fora)">
+<div class="card-head">
+<h2>transferegov_descartado</h2>
+<div class="desc-oficial">DESCARTADO -- redundante com a Base Discricionárias, 8/8 tabelas batendo linha a linha (Instrumento = NR_CONVENIO em 11/11).</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Fora da carteira / descartado</span>
+<span class="pill">0 colunas</span>
+<span class="pill emb">Transferegov</span>
+</div></div>
+</section>
+</div>
+
+<script>
+const DADOS = {"nos": [{"id": "hub_instrumentos", "faixa": 1, "eixo": "hub", "nregs": 204, "ncols": 18, "remarks": "O recurso. Cada linha e uma Proposta FAF (17 digitos) ou um Convenio/Contrato/Termo SIAFI (6 digitos) -- os dois mundos nao compartilham identificador, so convivem aqui."}, {"id": "notas_empenho", "faixa": 2, "eixo": "financeiro", "nregs": 241, "ncols": 4, "remarks": "Satelite direta do hub. Chave composta numa unica celula: 'proposta / ano --- portaria'. Quando a proposta falta, o elo e so a portaria."}, {"id": "ordens_bancarias", "faixa": 2, "eixo": "financeiro", "nregs": 235, "ncols": 4, "remarks": "Satelite direta do hub. So a proposta (sem ano/portaria); instrumento sem proposta grava '-' -- sao as 16 orfas."}, {"id": "emendas_indicacao_atual", "faixa": 0, "eixo": "indicacao", "nregs": 13, "ncols": 9, "remarks": "A camada antes da proposta: o parlamentar reserva um valor no orcamento do ano corrente. 2 das 13 ainda nao viraram instrumento -- essas 2 viram recurso novo (fora do escopo desta extracao, vinculo nao fechado)."}, {"id": "emendas_auto_comissao", "faixa": 0, "eixo": "indicacao", "nregs": 8, "ncols": 6, "remarks": "Satelite da indicacao atual: rateio por parlamentar dentro das emendas de comissao. So existe para o ano corrente -- nao sobrevive a virada do ano."}, {"id": "emendas_indicacao_anterior", "faixa": 0, "eixo": "indicacao", "nregs": 100, "ncols": 9, "remarks": "Historico de indicacao 2014-2025 -- contexto/hover, nao gera recurso novo. 9 das 99 antigas nunca viraram instrumento nesta base; 2 formalizaram por outro caminho (Discricionarias), 7 seguem sem explicacao."}, {"id": "emendas_tabela_instrumentos", "faixa": 2, "eixo": "emenda", "nregs": 121, "ncols": 20, "remarks": "Satelite direta do hub para os recursos de emenda: 121 linhas cobrem 114 propostas distintas (6 instrumentos de comissao/bancada tem mais de 1 linha). 7 propostas EMENDA de 1999-2012 nao aparecem aqui -- lacuna de cobertura nos anos antigos, nao erro."}, {"id": "obras_info_gerais", "faixa": 3, "eixo": "obra", "nregs": 43, "ncols": 11, "remarks": "O Sismob: 37 obras ligadas a proposta do hub + 6 orfas (proposta de 20 digitos, vinculo provado por valor+data+OB agregada na FundoFundo). Unica fonte que revela devolucao de recurso."}, {"id": "obras_datas_valores", "faixa": 3, "eixo": "obra", "nregs": 43, "ncols": 3, "remarks": "Data e OB de cada parcela -- o valor vem da 01.00, nunca daqui (achado 33). Repasse = campos das duas planilhas combinados."}, {"id": "obras_ciclo_datas", "faixa": 3, "eixo": "obra", "nregs": 43, "ncols": 3, "remarks": "8 das 9 colunas de data sao ganho liquido (nao existem em nenhuma outra planilha): cadastro, inicio de projeto, inicio de obra, conclusao, inauguracao, inicio de funcionamento, ultimo monitoramento, ultimo pagamento."}, {"id": "equipamentos", "faixa": 3, "eixo": "equipamento", "nregs": 2673, "ncols": 8, "remarks": "Detalhe de 30 propostas do hub (objeto 'Aquisicao de Equipamento e Material Permanente'). O dinheiro vem do Fundo de Saude; o CNPJ desta planilha e sempre da Prefeitura -- o bem fisico entra no patrimonio dela, nao do Fundo."}, {"id": "regularizacao_contas", "faixa": 3, "eixo": "conta", "nregs": 40, "ncols": 7, "remarks": "Historico de conta bancaria -- sai do nucleo do recurso (decisao de 13/08): conta nao e 1:1, a mesma proposta aparece 2x com contas diferentes para emendas diferentes. Vira TipoDetalhe=conta na lista Detalhe."}, {"id": "fundofundo_recorrentes", "faixa": 4, "eixo": "recorrente", "nregs": 6066, "ncols": 9, "remarks": "6.066 lancamentos: 200 com proposta (ja no hub) + 5.866 sem proposta. 5 dessas linhas pagam as 6 obras orfas (excluidas antes de agregar); as 5.861 restantes agregam por PROGRAMA(normalizado)+ANO+CNPJ em 679 recursos RECORRENTE."}, {"id": "planejamento_fora_carteira", "faixa": 4, "eixo": "fora", "nregs": 21, "ncols": 2, "remarks": "FORA DA CARTEIRA -- decisao do usuario. Nao e recurso (sem PROPOSTA/EMENDA/CNPJ especifico, sem valor): e condicao de elegibilidade do municipio para continuar recebendo Fundo a Fundo. 20/21 aprovados; RAG 2026 ainda nao iniciado (esperado)."}, {"id": "monitoramento_descartado", "faixa": 4, "eixo": "fora", "nregs": null, "ncols": 0, "remarks": "DESCARTADO -- decisao do usuario, 13/08. Mesmos 28 instrumentos do hub fatiados em colunas; unico dado novo (Saldo R$) e 0,24% do repassado e e a informacao mais volatil do projeto (foto de um dia). Estudado por inteiro antes de descartar."}, {"id": "transferegov_descartado", "faixa": 4, "eixo": "fora", "nregs": null, "ncols": 0, "remarks": "DESCARTADO -- redundante com a Base Discricionárias, 8/8 tabelas batendo linha a linha (Instrumento = NR_CONVENIO em 11/11)."}], "arestas": [{"de": "notas_empenho", "para": "hub_instrumentos", "implied": false}, {"de": "ordens_bancarias", "para": "hub_instrumentos", "implied": false}, {"de": "emendas_tabela_instrumentos", "para": "hub_instrumentos", "implied": false}, {"de": "emendas_auto_comissao", "para": "emendas_indicacao_atual", "implied": false}, {"de": "obras_info_gerais", "para": "hub_instrumentos", "implied": false}, {"de": "obras_datas_valores", "para": "obras_info_gerais", "implied": false}, {"de": "obras_ciclo_datas", "para": "obras_info_gerais", "implied": false}, {"de": "equipamentos", "para": "hub_instrumentos", "implied": false}, {"de": "regularizacao_contas", "para": "hub_instrumentos", "implied": false}, {"de": "regularizacao_contas", "para": "emendas_tabela_instrumentos", "implied": false}, {"de": "fundofundo_recorrentes", "para": "obras_info_gerais", "implied": true}, {"de": "fundofundo_recorrentes", "para": "hub_instrumentos", "implied": true}]};
+const map = document.getElementById('map');
+const svg = document.getElementById('edges');
+
+function desenhar(){
+  svg.innerHTML='';
+  const base = map.getBoundingClientRect();
+  const cor = getComputedStyle(document.documentElement);
+  for(const a of DADOS.arestas){
+    const de = document.getElementById('n-'+a.de), para = document.getElementById('n-'+a.para);
+    if(!de||!para) continue;
+    const d = de.getBoundingClientRect(), p = para.getBoundingClientRect();
+    const paiPrimeiro = p.left < d.left;
+    const x1 = (paiPrimeiro ? p.right : p.left) - base.left;
+    const y1 = p.top + p.height/2 - base.top;
+    const x2 = (paiPrimeiro ? d.left : d.right) - base.left;
+    const y2 = d.top + d.height/2 - base.top;
+    const mx = (x1+x2)/2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', a.implied ? cor.getPropertyValue('--amber') : cor.getPropertyValue('--border'));
+    path.setAttribute('stroke-width', a.implied ? '1.6' : '1.4');
+    if(a.implied) path.setAttribute('stroke-dasharray','5 4');
+    path.dataset.de=a.de; path.dataset.para=a.para;
+    svg.appendChild(path);
+  }
+}
+addEventListener('load',desenhar); addEventListener('resize',desenhar);
+new MutationObserver(desenhar).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+document.querySelectorAll('.node').forEach(n=>{
+  n.addEventListener('click',()=>{
+    const c=document.getElementById('c-'+n.dataset.id);
+    document.querySelectorAll('.card.hid').forEach(x=>x.classList.remove('hid'));
+    c.scrollIntoView({behavior:'smooth',block:'start'});
+    c.style.transition='none'; c.style.outline='2px solid var(--accent)';
+    setTimeout(()=>{c.style.transition='outline .6s'; c.style.outline='2px solid transparent';},700);
+  });
+  n.addEventListener('mouseenter',()=>{
+    svg.querySelectorAll('path').forEach(p=>{
+      const lig = p.dataset.de===n.dataset.id||p.dataset.para===n.dataset.id;
+      p.style.opacity = lig?'1':'.18';
+      if(lig) p.setAttribute('stroke-width','2.4');
+    });
+  });
+  n.addEventListener('mouseleave',()=>{
+    svg.querySelectorAll('path').forEach(p=>{p.style.opacity='1';
+      p.setAttribute('stroke-width', p.getAttribute('stroke-dasharray')?'1.6':'1.4');});
+  });
+});
+
+const q=document.getElementById('q');
+let eixoAtivo='*';
+function aplicar(){
+  const termo=q.value.trim().toLowerCase();
+  const ids=new Set();
+  document.querySelectorAll('.card').forEach(c=>{
+    const okEixo = eixoAtivo==='*'||c.dataset.eixo===eixoAtivo;
+    const okTermo = !termo||c.textContent.toLowerCase().includes(termo);
+    const mostra = okEixo&&okTermo;
+    c.classList.toggle('hid',!mostra);
+    if(mostra) ids.add(c.id.slice(2));
+  });
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('off',!ids.has(n.dataset.id)));
+}
+q.addEventListener('input',aplicar);
+document.querySelectorAll('.btn[data-eixo]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.btn[data-eixo]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); eixoAtivo=b.dataset.eixo; aplicar();
+  });
+});
+</script>
+</div></body></html>

@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SBGov — Estrutura — Transferegov / Fundo a Fundo</title>
+<style>
+:root{
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#F6F7F5; --surface:#FFFFFF; --ink:#223032; --muted:#5F6F6D; --border:#DDE4E1;
+  --accent:#0E7C6B; --accent-fill:#E3F0EC; --amber:#A87721; --finance:#3A6EA5;
+  --chip-num-bg:#E9F2EE; --chip-num-ink:#0E7C6B;
+  --chip-date-bg:#F5EDDC; --chip-date-ink:#8A6318;
+  --chip-text-bg:#EDEFEE; --chip-text-ink:#5F6F6D;
+  --note-bg:#FFF8E6; --note-ink:#6B5312;
+  --e-programa:#7A5AA8; --e-hub:#0E7C6B; --e-pactuado:#2E7D57;
+  --e-analise:#A87721; --e-financeiro:#3A6EA5; --e-prestacao:#B4574B;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#111B1D; --surface:#182426; --ink:#D9E3E0; --muted:#8AA09C; --border:#2A3A3C;
+  --accent:#46B49C; --accent-fill:#1D3330; --amber:#C99A45; --finance:#7FB0E0;
+  --chip-num-bg:#17302A; --chip-num-ink:#46B49C;
+  --chip-date-bg:#332B18; --chip-date-ink:#C99A45;
+  --chip-text-bg:#1F2A2B; --chip-text-ink:#8AA09C;
+  --note-bg:#2A2413; --note-ink:#D8C48A;
+  --e-programa:#A98BD4; --e-hub:#46B49C; --e-pactuado:#5FB98C;
+  --e-analise:#C99A45; --e-financeiro:#7FB0E0; --e-prestacao:#DE8578;
+}}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+.page{max-width:1500px;margin:0 auto;padding:28px 20px 80px}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.7rem;color:var(--accent);font-weight:600}
+h1{margin:.25rem 0 .4rem;font-size:1.75rem;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:80ch;margin-bottom:18px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 26px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:130px}
+.stat b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;font-size:.8rem}
+.lg-line{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.diagram-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:30px}
+.diagram-scroll{overflow-x:auto;position:relative}
+#map{position:relative;min-width:1180px}
+#edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.faixas{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;position:relative;z-index:1}
+.faixa-tit{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+  border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:12px}
+.node{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--ec);
+  border-radius:9px;padding:9px 11px;margin-bottom:10px;cursor:pointer;transition:.15s}
+.node:hover{border-color:var(--ec);transform:translateY(-1px)}
+.node.hub{border-width:2px;border-left-width:6px;box-shadow:0 2px 10px rgba(14,124,107,.14)}
+.node.off{opacity:.22}
+.node-name{font:600 .82rem/1.3 var(--mono);word-break:break-all}
+.node-badges{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.pill{font-size:.65rem;padding:1px 6px;border-radius:20px;background:var(--chip-text-bg);color:var(--chip-text-ink)}
+.pill.reg{background:var(--accent-fill);color:var(--accent);font-variant-numeric:tabular-nums}
+.pill.emb{background:var(--note-bg);color:var(--note-ink)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.search{flex:1;min-width:240px;padding:9px 12px;border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);color:var(--ink);font:inherit}
+.btn{padding:8px 13px;border:1px solid var(--border);border-radius:9px;background:var(--surface);
+  color:var(--muted);font:inherit;cursor:pointer}
+.btn.on{background:var(--accent-fill);color:var(--accent);border-color:var(--accent)}
+.cards{display:grid;gap:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--ec);
+  border-radius:13px;overflow:hidden;scroll-margin-top:14px}
+.card.hid{display:none}
+.card-head{padding:15px 18px;border-bottom:1px solid var(--border)}
+.card-head h2{margin:0 0 5px;font:600 1rem/1.3 var(--mono);word-break:break-all}
+.desc-oficial{color:var(--muted);font-size:.87rem;margin-bottom:9px}
+.meta-row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.rels{padding:11px 18px;background:var(--bg);border-bottom:1px solid var(--border);font-size:.79rem}
+.rel{display:inline-block;margin:2px 10px 2px 0;color:var(--muted);font-family:var(--mono)}
+.rel b{color:var(--ink);font-weight:600}
+.rel.imp{color:var(--amber)}
+.colwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th{text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+  padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;background:var(--surface)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:color-mix(in srgb,var(--bg) 55%,transparent)}
+.col-name{font-family:var(--mono);font-weight:600;white-space:nowrap}
+.tchip{font-size:.63rem;padding:1px 6px;border-radius:5px;font-family:var(--mono);white-space:nowrap}
+.tchip.num{background:var(--chip-num-bg);color:var(--chip-num-ink)}
+.tchip.date{background:var(--chip-date-bg);color:var(--chip-date-ink)}
+.tchip.text{background:var(--chip-text-bg);color:var(--chip-text-ink)}
+.flag{font-size:.63rem;font-family:var(--mono);padding:1px 5px;border-radius:5px;
+  background:var(--accent-fill);color:var(--accent);white-space:nowrap}
+.flag.fk{background:var(--chip-date-bg);color:var(--chip-date-ink)}
+.flag.imp{background:var(--note-bg);color:var(--note-ink)}
+.col-desc{color:var(--muted);min-width:230px;max-width:430px}
+.col-ex{font-family:var(--mono);font-size:.74rem;max-width:270px;word-break:break-word}
+.dom{display:block;color:var(--muted);font-size:.68rem;margin-top:3px}
+.note{background:var(--note-bg);color:var(--note-ink);border-radius:10px;padding:12px 15px;
+  margin:16px 0;font-size:.85rem}
+.note b{display:block;margin-bottom:3px}
+</style></head><body><div class="page">
+
+<div class="eyebrow">SBGov · Transferegov / Fundo a Fundo · Modo Estrutura</div>
+<h1>Estrutura da Base Fundo a Fundo</h1>
+<div class="sub">Transferências Fundo a Fundo do Transferegov: repasse federal direto para o
+município, <b>sem convênio</b>. O instrumento é o <b>Plano de Ação</b>. Todas as 25 tabelas do
+modelo oficial, com as colunas, a descrição do próprio órgão e um exemplo de conteúdo real
+de São Bernardo do Campo.</div>
+
+<div class="stats">
+  <div class="stat"><b>25</b><span>tabelas</span></div>
+  <div class="stat"><b>315</b><span>colunas</span></div>
+  <div class="stat"><b>24+2</b><span>relações (decl.+infer.)</span></div>
+  <div class="stat"><b>15</b><span>planos de ação (SBC)</span></div>
+  <div class="stat"><b>49.325.607,32</b><span>valor total (SBC)</span></div>
+  <div class="stat"><b>2.884</b><span>registros extraídos</span></div>
+</div>
+
+<div class="legend">
+<div class="lg-line"><span class="dot" style="background:var(--e-programa)"></span>Programa federal</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-hub)"></span>O recurso</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-pactuado)"></span>O que foi pactuado</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-analise)"></span>Trâmite e aprovação</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-financeiro)"></span>Dinheiro</div>
+<div class="lg-line"><span class="dot" style="background:var(--e-prestacao)"></span>Prestação de contas</div>
+<div class="lg-line"><span class="dot" style="background:var(--amber)"></span>relação inferida (não declarada no banco)</div>
+</div>
+<div class="diagram-panel"><div class="diagram-scroll"><div id="map">
+<svg id="edges"></svg><div class="faixas">
+<div class="faixa" data-faixa="0"><div class="faixa-tit">Programa federal</div>
+<div class="node" id="n-programas_faf" data-id="programas_faf" style="--ec:var(--e-programa)" title="Tabela que armazena os Programas Fundo a Fundo (FAF)"><div class="node-name">programas</div><div class="node-badges"><span class="pill">29 col.</span><span class="pill reg">22 reg.</span></div></div>
+<div class="node" id="n-programas_beneficiarios_faf" data-id="programas_beneficiarios_faf" style="--ec:var(--e-programa)" title="Tabela que armazena os Beneficiários de Programas FAF"><div class="node-name">programas_beneficiarios</div><div class="node-badges"><span class="pill">14 col.</span><span class="pill reg">21 reg.</span></div></div>
+<div class="node" id="n-programas_ageis_faf" data-id="programas_ageis_faf" style="--ec:var(--e-programa)" title="Tabela que armazena os Programas Ágeis FAF"><div class="node-name">programas_ageis</div><div class="node-badges"><span class="pill">10 col.</span><span class="pill reg">37 reg.</span></div></div>
+<div class="node" id="n-programas_acao_orcamentaria_faf" data-id="programas_acao_orcamentaria_faf" style="--ec:var(--e-programa)" title="Tabela que armazena as Ações Orçamentárias dos Programas FAF"><div class="node-name">programas_acao_orcamentaria</div><div class="node-badges"><span class="pill">5 col.</span><span class="pill emb">embutida</span></div></div>
+<div class="node" id="n-programas_natureza_despesa_faf" data-id="programas_natureza_despesa_faf" style="--ec:var(--e-programa)" title="Tabela que armazena as Naturezas de Despesa dos Programas FAF"><div class="node-name">programas_natureza_despesa</div><div class="node-badges"><span class="pill">3 col.</span><span class="pill emb">embutida</span></div></div>
+</div>
+<div class="faixa" data-faixa="1"><div class="faixa-tit">O recurso</div>
+<div class="node hub" id="n-planos_acao_faf" data-id="planos_acao_faf" style="--ec:var(--e-hub)" title="Tabela que armazena os Planos de Ação FAF"><div class="node-name">planos_acao</div><div class="node-badges"><span class="pill">51 col.</span><span class="pill reg">15 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="2"><div class="faixa-tit">Detalhe direto do recurso</div>
+<div class="node" id="n-planos_acao_metas_faf" data-id="planos_acao_metas_faf" style="--ec:var(--e-pactuado)" title="Tabela que armazena as Metas dos Planos de Ação FAF"><div class="node-name">planos_acao_metas</div><div class="node-badges"><span class="pill">8 col.</span><span class="pill reg">21 reg.</span></div></div>
+<div class="node" id="n-planos_acao_destinacao_recursos_faf" data-id="planos_acao_destinacao_recursos_faf" style="--ec:var(--e-pactuado)" title="Tabela que armazena a Destinação de Recursos dos Planos de Ação FAF"><div class="node-name">planos_acao_destinacao_recursos</div><div class="node-badges"><span class="pill">6 col.</span><span class="pill reg">29 reg.</span></div></div>
+<div class="node" id="n-planos_acao_historico_faf" data-id="planos_acao_historico_faf" style="--ec:var(--e-analise)" title="Tabela que armazena o Histórico das Situações dos Planos de Ação FAF"><div class="node-name">planos_acao_historico</div><div class="node-badges"><span class="pill">6 col.</span><span class="pill reg">205 reg.</span></div></div>
+<div class="node" id="n-planos_acao_analises_faf" data-id="planos_acao_analises_faf" style="--ec:var(--e-analise)" title="Tabela que armazena as Análises dos Planos de Ação FAF"><div class="node-name">planos_acao_analises</div><div class="node-badges"><span class="pill">9 col.</span><span class="pill reg">76 reg.</span></div></div>
+<div class="node" id="n-termos_adesao_faf" data-id="termos_adesao_faf" style="--ec:var(--e-analise)" title="Tabela que armazena os Termos de Adesão FAF"><div class="node-name">termos_adesao</div><div class="node-badges"><span class="pill">10 col.</span><span class="pill reg">14 reg.</span></div></div>
+<div class="node" id="n-relatorios_gestao_faf" data-id="relatorios_gestao_faf" style="--ec:var(--e-prestacao)" title="Tabela que armazena os dados dos Relatórios de Gestão FAF"><div class="node-name">relatorios_gestao</div><div class="node-badges"><span class="pill">14 col.</span><span class="pill reg">19 reg.</span></div></div>
+<div class="node" id="n-planos_acao_dados_bancarios_faf" data-id="planos_acao_dados_bancarios_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena os Dados Bancários dos Planos de Ação FAF"><div class="node-name">planos_acao_dados_bancarios</div><div class="node-badges"><span class="pill">12 col.</span><span class="pill reg">25 reg.</span></div></div>
+<div class="node" id="n-empenhos_faf" data-id="empenhos_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena os Dados dos Empenhos FAF"><div class="node-name">empenhos</div><div class="node-badges"><span class="pill">30 col.</span><span class="pill reg">1 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="3"><div class="faixa-tit">Segundo nível</div>
+<div class="node" id="n-planos_acao_metas_acoes_faf" data-id="planos_acao_metas_acoes_faf" style="--ec:var(--e-pactuado)" title="Tabela que armazena as Ações das Metas dos Planos de Ação FAF"><div class="node-name">planos_acao_metas_acoes</div><div class="node-badges"><span class="pill">8 col.</span><span class="pill reg">47 reg.</span></div></div>
+<div class="node" id="n-planos_acao_analises_responsaveis_faf" data-id="planos_acao_analises_responsaveis_faf" style="--ec:var(--e-analise)" title="Tabela que armazena os Responsáveis pelas Análises dos Planos de Ação FAF"><div class="node-name">planos_acao_analises_responsaveis</div><div class="node-badges"><span class="pill">4 col.</span><span class="pill reg">92 reg.</span></div></div>
+<div class="node" id="n-termos_adesao_historico_faf" data-id="termos_adesao_historico_faf" style="--ec:var(--e-analise)" title="Tabela que armazena os Históricos dos Termos de Adesão FAF"><div class="node-name">termos_adesao_historico</div><div class="node-badges"><span class="pill">5 col.</span><span class="pill reg">42 reg.</span></div></div>
+<div class="node" id="n-relatorios_gestao_acoes_faf" data-id="relatorios_gestao_acoes_faf" style="--ec:var(--e-prestacao)" title="Tabela que armazena os dados das Ações dos Relatórios de Gestão FAF"><div class="node-name">relatorios_gestao_acoes</div><div class="node-badges"><span class="pill">5 col.</span><span class="pill reg">47 reg.</span></div></div>
+<div class="node" id="n-relatorios_gestao_analises_faf" data-id="relatorios_gestao_analises_faf" style="--ec:var(--e-prestacao)" title="Tabela que armazena os dados das Análises dos Relatórios de Gestão FAF"><div class="node-name">relatorios_gestao_analises</div><div class="node-badges"><span class="pill">8 col.</span><span class="pill reg">38 reg.</span></div></div>
+<div class="node" id="n-gestao_financeira_saldo_conta_faf" data-id="gestao_financeira_saldo_conta_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena os Dados dos Saldos em Conta dos Planos de Ação FAF"><div class="node-name">gestao_financeira_saldo_conta</div><div class="node-badges"><span class="pill">4 col.</span><span class="pill emb">embutida</span></div></div>
+<div class="node" id="n-gestao_financeira_lancamentos_faf" data-id="gestao_financeira_lancamentos_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena os Lançamentos da Gestão Financeira FAF"><div class="node-name">gestao_financeira_lancamentos</div><div class="node-badges"><span class="pill">33 col.</span><span class="pill reg">969 reg.</span></div></div>
+</div>
+<div class="faixa" data-faixa="4"><div class="faixa-tit">Terceiro nível</div>
+<div class="node" id="n-relatorios_gestao_analises_responsaveis_faf" data-id="relatorios_gestao_analises_responsaveis_faf" style="--ec:var(--e-prestacao)" title="Tabela que armazena os dados dos Responsáveis pelas Análises dos Relatórios de Gestão FAF"><div class="node-name">relatorios_gestao_analises_responsaveis</div><div class="node-badges"><span class="pill">4 col.</span><span class="pill reg">38 reg.</span></div></div>
+<div class="node" id="n-gestao_financeira_subtransacoes_faf" data-id="gestao_financeira_subtransacoes_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena os dados das Subtransações dos Lançamentos da Gestão Financeira FAF"><div class="node-name">gestao_financeira_subtransacoes</div><div class="node-badges"><span class="pill">17 col.</span><span class="pill reg">1126 reg.</span></div></div>
+<div class="node" id="n-gestao_financeira_lancamentos_categorias_despesa_faf" data-id="gestao_financeira_lancamentos_categorias_despesa_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena as Categorias de Despesa dos Lançamentos da Gestão Financeira FAF"><div class="node-name">gestao_financeira_lancamentos_categorias_despesa</div><div class="node-badges"><span class="pill">10 col.</span><span class="pill emb">embutida</span></div></div>
+<div class="node" id="n-gestao_financeira_subtransacoes_categorias_despesa_faf" data-id="gestao_financeira_subtransacoes_categorias_despesa_faf" style="--ec:var(--e-financeiro)" title="Tabela que armazena as Categorias de Despesa das Subtransações dos Lançamentos da Gestão Financeira FAF"><div class="node-name">gestao_financeira_subtransacoes_categorias_despesa</div><div class="node-badges"><span class="pill">10 col.</span><span class="pill emb">embutida</span></div></div>
+</div>
+</div></div></div></div>
+<div class="note"><b>Como ler o mapa</b>
+Da esquerda para a direita é o caminho do dinheiro: o governo federal publica um
+<b>programa</b> e diz quanto cabe ao município; o município responde com um <b>plano de ação</b> —
+que é o recurso; e o resto detalha esse plano (o que foi pactuado, o trâmite, o dinheiro e a
+prestação de contas). Clique em qualquer tabela para ir ao seu dicionário completo.</div>
+
+<div class="toolbar">
+  <input class="search" id="q" placeholder="Buscar tabela, coluna ou descrição… (ex.: cnpj, valor, emenda)">
+  <button class="btn on" data-eixo="*">Todos</button>
+<button class="btn" data-eixo="programa">Programa federal</button>
+<button class="btn" data-eixo="hub">O recurso</button>
+<button class="btn" data-eixo="pactuado">O que foi pactuado</button>
+<button class="btn" data-eixo="analise">Trâmite e aprovação</button>
+<button class="btn" data-eixo="financeiro">Dinheiro</button>
+<button class="btn" data-eixo="prestacao">Prestação de contas</button>
+</div><div class="cards" id="cards">
+<section class="card" id="c-programas_faf" data-eixo="programa" style="--ec:var(--e-programa)">
+<div class="card-head">
+<h2>programas_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Programas Fundo a Fundo (FAF)</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Programa federal</span>
+<span class="pill">29 colunas</span>
+<span class="pill reg">22 registros de SBC</span>
+<span class="pill">API: /programas</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← planos_acao_faf</b> por id_programa</span>
+<span class="rel"><b>← programas_acao_orcamentaria_faf</b> por id_programa</span>
+<span class="rel"><b>← programas_ageis_faf</b> por id_programa</span>
+<span class="rel"><b>← programas_beneficiarios_faf</b> por id_programa</span>
+<span class="rel"><b>← programas_natureza_despesa_faf</b> por id_programa</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_fundo_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Fundo do Programa</td><td class="col-ex">49<span class="dom">49 (17) · 21873 (3) · 928 (1) · 77756 (1)</span></td></tr>
+<tr><td class="col-name">id_orgao_superior_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Órgão Superior do Programa</td><td class="col-ex">2208<span class="dom">2208 (17) · 308821 (4) · 308798 (1)</span></td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">5</td></tr>
+<tr><td class="col-name">ano_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Ano do Programa</td><td class="col-ex">2020</td></tr>
+<tr><td class="col-name">modalidade_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Modalidade do Programa</td><td class="col-ex">FUNDO_A_FUNDO<span class="dom">FUNDO_A_FUNDO (22)</span></td></tr>
+<tr><td class="col-name">codigo_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Programa</td><td class="col-ex">220820200002</td></tr>
+<tr><td class="col-name">nome_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Programa</td><td class="col-ex">Gestão e Manutenção da Rede de Unidades de Atend…</td></tr>
+<tr><td class="col-name">id_unidade_gestora_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Código UG - Unidade Gestora do Orgão do Programa</td><td class="col-ex">380908</td></tr>
+<tr><td class="col-name">nome_institucional_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome Institucional do Programa</td><td class="col-ex">Gestão e Manutenção da Rede Sine</td></tr>
+<tr><td class="col-name">permite_transferencia_sem_fundo_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Permite Transferência Sem Fundo do Programa</td><td class="col-ex">False<span class="dom">False (17) · True (5)</span></td></tr>
+<tr><td class="col-name">objetivo_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Objetivo do Programa</td><td class="col-ex">Articular órgãos e entidades da administração pú…</td></tr>
+<tr><td class="col-name">descricao_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Programa</td><td class="col-ex">Por meio de transferências automáticas de recurs…</td></tr>
+<tr><td class="col-name">situacao_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Programa</td><td class="col-ex">DISPONIBILIZADO<span class="dom">DISPONIBILIZADO (22)</span></td></tr>
+<tr><td class="col-name">valor_global_programa</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Global do Programa</td><td class="col-ex">65176983.25</td></tr>
+<tr><td class="col-name">quantidade_parcelas_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Quantidade de Parcelas do Programa</td><td class="col-ex">1<span class="dom">1 (21) · 4 (1)</span></td></tr>
+<tr><td class="col-name">data_inicio_recebimento_planos_acao_beneficiarios_especificos</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Início do Recebimento dos Planos de Ação para Beneficiários Específicos</td><td class="col-ex">2020-07-06</td></tr>
+<tr><td class="col-name">data_fim_recebimento_planos_acao_beneficiarios_especificos</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data Final do Recebimento dos Planos de Ação para Beneficiários Específicos</td><td class="col-ex">2020-10-31</td></tr>
+<tr><td class="col-name">data_inicio_recebimento_planos_acao_beneficiarios_emendas</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Início do Recebimento dos Planos de Ação para Beneficiários de Emendas</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">data_fim_recebimento_planos_acao_beneficiarios_emendas</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data Final do Recebimento dos Planos de Ação para Beneficiários de Emendas</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">data_inicio_recebimento_planos_acao_beneficiarios_voluntarios</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Início do Recebimento dos Planos de Ação para Beneficiários Voluntários</td><td class="col-ex">2023-07-20<span class="dom">2023-07-20 (1) · 2026-05-29 (1)</span></td></tr>
+<tr><td class="col-name">data_fim_recebimento_planos_acao_beneficiarios_voluntarios</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data Final do Recebimento dos Planos de Ação para Beneficiários Voluntários</td><td class="col-ex">2023-12-31<span class="dom">2023-12-31 (1) · 2026-07-31 (1)</span></td></tr>
+<tr><td class="col-name">sigla_orgao_superior_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla do Órgão Superior do Programa</td><td class="col-ex">SPPE<span class="dom">SPPE (17) · MinC (4) · MCID (1)</span></td></tr>
+<tr><td class="col-name">cnpj_orgao_superior_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Órgão Superior do Programa</td><td class="col-ex">05465986000199<span class="dom">05465986000199 (1)</span></td></tr>
+<tr><td class="col-name">nome_orgao_superior_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Órgão Superior do Programa</td><td class="col-ex">Secretaria de Políticas Públicas de Emprego<span class="dom">Secretaria de Políticas … (17) · Ministério da Cultura (4) · Ministério das Cidades (1)</span></td></tr>
+<tr><td class="col-name">cnpj_fundo_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Fundo do Programa</td><td class="col-ex">07526983002278<span class="dom">07526983002278 (17) · 37930861000189 (1)</span></td></tr>
+<tr><td class="col-name">nome_fundo_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Fundo do Programa</td><td class="col-ex">FUNDO DE AMPARO AO TRABALHADOR<span class="dom">FUNDO DE AMPARO AO TRABA… (17) · FUNDO NACIONAL DA CULTUR… (4) · Fundo Repassador Ministé… (1)</span></td></tr>
+<tr><td class="col-name">uf_fundo_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Fundo do Programa</td><td class="col-ex">DF<span class="dom">DF (22)</span></td></tr>
+<tr><td class="col-name">municipio_fundo_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Fundo do Programa</td><td class="col-ex">BRASÍLIA<span class="dom">BRASÍLIA (22)</span></td></tr>
+<tr><td class="col-name">codigo_ibge_fundo_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código IBGE do Município do Fundo do Programa</td><td class="col-ex">5300108<span class="dom">5300108 (22)</span></td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-programas_beneficiarios_faf" data-eixo="programa" style="--ec:var(--e-programa)">
+<div class="card-head">
+<h2>programas_beneficiarios_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Beneficiários de Programas FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Programa federal</span>
+<span class="pill">14 colunas</span>
+<span class="pill reg">21 registros de SBC</span>
+<span class="pill">API: /programas-beneficiarios</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ programas_faf</b> por id_programa</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_beneficiario_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Beneficiário do Programa</td><td class="col-ex">7292</td></tr>
+<tr><td class="col-name">nome_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Beneficiário do Programa</td><td class="col-ex">MUNICIPIO DE SAO BERNARDO DO CAMPO<span class="dom">MUNICIPIO DE SAO BERNARD… (20) · SAO BERNARDO DO CAMPO (1)</span></td></tr>
+<tr><td class="col-name">cnpj_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Beneficiário do Programa</td><td class="col-ex">46523239000147<span class="dom">46523239000147 (21)</span></td></tr>
+<tr><td class="col-name">valor_beneficiario_programa</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Destinado ao Beneficiário do Programa</td><td class="col-ex">40001.14</td></tr>
+<tr><td class="col-name">numero_emenda_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número da Emenda do Beneficiário do Programa</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">nome_parlamentar_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Parlamentar Autor da Emenda do Beneficiário do Programa</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→programas</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">19</td></tr>
+<tr><td class="col-name">tipo_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo do Beneficiário do Programa</td><td class="col-ex">ESPECIFICO<span class="dom">ESPECIFICO (21)</span></td></tr>
+<tr><td class="col-name">nome_ente_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Ente do Beneficiário do Programa</td><td class="col-ex">MUNICIPIO DE SAO BERNARDO DO CAMPO<span class="dom">MUNICIPIO DE SAO BERNARD… (21)</span></td></tr>
+<tr><td class="col-name">uf_ente_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Beneficiário do Programa</td><td class="col-ex">SP<span class="dom">SP (21)</span></td></tr>
+<tr><td class="col-name">nome_municipio_ente_beneficiario_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Ente Beneficiário do Programa</td><td class="col-ex">SÃO BERNARDO DO CAMPO<span class="dom">SÃO BERNARDO DO CAMPO (21)</span></td></tr>
+<tr><td class="col-name">codigo_ibge_municipio_ente_beneficiario_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código IBGE do Município do Ente Beneficiário do Programa</td><td class="col-ex">3548708<span class="dom">3548708 (21)</span></td></tr>
+<tr><td class="col-name">id_ente_beneficiario_programa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Ente Beneficiário do Programa</td><td class="col-ex">4242<span class="dom">4242 (21)</span></td></tr>
+<tr><td class="col-name">uf_ente_recebedor_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Ente Recebedor do Plano de Ação</td><td class="col-ex">(não exposto pela API)</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-programas_ageis_faf" data-eixo="programa" style="--ec:var(--e-programa)">
+<div class="card-head">
+<h2>programas_ageis_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Programas Ágeis FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Programa federal</span>
+<span class="pill">10 colunas</span>
+<span class="pill reg">37 registros de SBC</span>
+<span class="pill">API: /programas-gestao-agil</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ programas_faf</b> por id_programa</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_programa_agil</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Programa Ágil</td><td class="col-ex">11</td></tr>
+<tr><td class="col-name">id_programa_agil_bb</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Programa Ágil no BB</td><td class="col-ex">13</td></tr>
+<tr><td class="col-name">nome_programa_agil</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Programa Ágil</td><td class="col-ex">GESTAO REDE SINE RP</td></tr>
+<tr><td class="col-name">codigo_programa_agil</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Programa Ágil</td><td class="col-ex">10</td></tr>
+<tr><td class="col-name">id_orgao_programa_agil</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Órgão do Programa Ágil</td><td class="col-ex">2208<span class="dom">2208 (31) · 308821 (5) · 308798 (1)</span></td></tr>
+<tr><td class="col-name">codigo_siorg_orgao_programa_agil</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código SIORG do Órgão do Programa Ágil</td><td class="col-ex">2208<span class="dom">2208 (31) · 308821 (5) · 308798 (1)</span></td></tr>
+<tr><td class="col-name">sigla_orgao_programa_agil</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla do Órgão do Programa Ágil</td><td class="col-ex">SPPE<span class="dom">SPPE (31) · MinC (5) · MCID (1)</span></td></tr>
+<tr><td class="col-name">cnpj_orgao_programa_agil</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Órgão do Programa Ágil</td><td class="col-ex">05465986000199<span class="dom">05465986000199 (1)</span></td></tr>
+<tr><td class="col-name">nome_orgao_programa_agil</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Órgão do Programa Ágil</td><td class="col-ex">Secretaria de Políticas Públicas de Emprego<span class="dom">Secretaria de Políticas … (31) · Ministério da Cultura (5) · Ministério das Cidades (1)</span></td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→programas</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">5</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-programas_acao_orcamentaria_faf" data-eixo="programa" style="--ec:var(--e-programa)">
+<div class="card-head">
+<h2>programas_acao_orcamentaria_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Ações Orçamentárias dos Programas FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Programa federal</span>
+<span class="pill">5 colunas</span>
+<span class="pill emb">sem endpoint próprio</span>
+<span class="pill">API: embutida em /programas</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ programas_faf</b> por id_programa</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_acao_orcamentaria_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Ação Orçamentária do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">codigo_acao_orcamentaria_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Código da Ação Orçamentária do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">descricao_acao_orcamentaria_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Ação Orçamentária do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">valor_acao_orcamentaria_programa</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor da Ação Orçamentária do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→programas</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">—</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-programas_natureza_despesa_faf" data-eixo="programa" style="--ec:var(--e-programa)">
+<div class="card-head">
+<h2>programas_natureza_despesa_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Naturezas de Despesa dos Programas FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Programa federal</span>
+<span class="pill">3 colunas</span>
+<span class="pill emb">sem endpoint próprio</span>
+<span class="pill">API: embutida em /programas</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ programas_faf</b> por id_programa</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_natureza_despesa_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Natureza de Despesa do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">grupo_natureza_despesa_programa</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Grupo Natureza de Despesa do Programa</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→programas</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">—</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_faf" data-eixo="hub" style="--ec:var(--e-hub)">
+<div class="card-head">
+<h2>planos_acao_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">O recurso</span>
+<span class="pill">51 colunas</span>
+<span class="pill reg">15 registros de SBC</span>
+<span class="pill">API: /planos-acao</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← empenhos_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← planos_acao_analises_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← planos_acao_dados_bancarios_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← planos_acao_destinacao_recursos_faf</b> por id_plano_acao</span>
+<span class="rel"><b>→ programas_faf</b> por id_programa</span>
+<span class="rel"><b>← planos_acao_historico_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← planos_acao_metas_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← relatorios_gestao_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← termos_adesao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_fundo_vinculado_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Fundo Vinculado no cadastro do Plano de Ação</td><td class="col-ex">7412<span class="dom">7412 (10) · 950 (4)</span></td></tr>
+<tr><td class="col-name">tipo_unidade_recebedora_vinculada_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo da Unidade Recebedora Vinculada ao Plano de Ação</td><td class="col-ex">FUNDO<span class="dom">FUNDO (15)</span></td></tr>
+<tr><td class="col-name">id_ente_recebedor_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Ente Recebedor no cadastro do Plano de Ação</td><td class="col-ex">4242<span class="dom">4242 (15)</span></td></tr>
+<tr><td class="col-name">tipo_unidade_recebedora_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo da Unidade Recebedora do Plano de Ação</td><td class="col-ex">ENTE<span class="dom">ENTE (15)</span></td></tr>
+<tr><td class="col-name">id_fundo_repassador_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Fundo Repassador no cadastro do Plano de Ação</td><td class="col-ex">77756<span class="dom">49 (10) · 21873 (3) · 77756 (1) · 928 (1)</span></td></tr>
+<tr><td class="col-name">id_ente_repassador_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Ente Repassador no cadastro do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">id_orgao_repassador_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador Único do Órgão Repassador no cadastro do Plano de Ação</td><td class="col-ex">308798<span class="dom">2208 (10) · 308821 (4) · 308798 (1)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">7064</td></tr>
+<tr><td class="col-name">codigo_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Código do Plano de Ação</td><td class="col-ex">30879820220001-007064</td></tr>
+<tr><td class="col-name">data_inicio_vigencia_plano_acao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Ínicio da Vigência do Plano de Ação</td><td class="col-ex">2022-09-23</td></tr>
+<tr><td class="col-name">data_fim_vigencia_plano_acao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Fim da Vigência do Plano de Ação</td><td class="col-ex">2023-05-31</td></tr>
+<tr><td class="col-name">diagnostico_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Diagnóstico do Plano de Ação</td><td class="col-ex">Constante redução da demanda de usuários no tran…</td></tr>
+<tr><td class="col-name">objetivos_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Objetivos do Plano de Ação</td><td class="col-ex">Equilíbrio econômico-financeiro dos contratos de…</td></tr>
+<tr><td class="col-name">situacao_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Plano de Ação</td><td class="col-ex">AUTORIZADO<span class="dom">AUTORIZADO (13) · ENVIADO_ANALISE (1) · ADITIVACAO_ENVIADA_PARA_… (1)</span></td></tr>
+<tr><td class="col-name">valor_repasse_emenda_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor de Repasse da Emenda Parlamentar do Plano de Ação</td><td class="col-ex">0.0<span class="dom">0.0 (15)</span></td></tr>
+<tr><td class="col-name">valor_repasse_especifico_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor do Repasse Específico do Plano de Ação</td><td class="col-ex">10233416.51</td></tr>
+<tr><td class="col-name">valor_repasse_voluntario_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor do Repasse Voluntário do Plano de Ação</td><td class="col-ex">0.0<span class="dom">0.0 (14) · 250895.39 (1)</span></td></tr>
+<tr><td class="col-name">valor_total_repasse_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Total do Repasse do Plano de Ação</td><td class="col-ex">10233416.51</td></tr>
+<tr><td class="col-name">valor_recursos_proprios_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor dos Recursos Próprios do Plano de Ação</td><td class="col-ex">0.0</td></tr>
+<tr><td class="col-name">valor_outros_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Outros do Plano de Ação</td><td class="col-ex">0.0<span class="dom">0.0 (13) · 30854.53 (1) · 73459.05 (1)</span></td></tr>
+<tr><td class="col-name">valor_rendimentos_aplicacao_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor dos Rendimentos da Aplicação do Plano de Ação</td><td class="col-ex">0.0<span class="dom">0.0 (14) · 70700.87 (1)</span></td></tr>
+<tr><td class="col-name">valor_total_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Total do Plano de Ação</td><td class="col-ex">10233416.51</td></tr>
+<tr><td class="col-name">valor_total_investimento_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Total de Investimento do Plano de Ação</td><td class="col-ex">0.0<span class="dom">0.0 (13) · 280688.63 (1) · 530296.98 (1)</span></td></tr>
+<tr><td class="col-name">valor_total_custeio_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Total de Custeio do Plano de Ação</td><td class="col-ex">10233415.51</td></tr>
+<tr><td class="col-name">valor_saldo_disponivel_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor do Saldo Disponível do Plano de Ação</td><td class="col-ex">1.0<span class="dom">0.0 (14) · 1.0 (1)</span></td></tr>
+<tr><td class="col-name">id_programa</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→programas</span></td><td class="col-desc">Identificador Único do Programa</td><td class="col-ex">38</td></tr>
+<tr><td class="col-name">sigla_orgao_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla do Órgão Repassador do Plano de Ação</td><td class="col-ex">MCID<span class="dom">SPPE (10) · MinC (4) · MCID (1)</span></td></tr>
+<tr><td class="col-name">cnpj_orgao_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Órgão Repassador do Plano de Ação</td><td class="col-ex">05465986000199<span class="dom">05465986000199 (1)</span></td></tr>
+<tr><td class="col-name">nome_orgao_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Órgão Repassador do Plano de Ação</td><td class="col-ex">Ministério das Cidades<span class="dom">Secretaria de Políticas … (10) · Ministério da Cultura (4) · Ministério das Cidades (1)</span></td></tr>
+<tr><td class="col-name">cnpj_ente_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Ente Repassador do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">nome_ente_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Ente Repassador do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">uf_ente_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Ente Repassador do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">nome_municipio_ente_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Ente Repassador do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">codigo_ibge_municipio_ente_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Código IBGE do Município do Ente Repassador do Plano de Ação</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">cnpj_fundo_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Fundo Repassador do Plano de Ação</td><td class="col-ex">07526983002278<span class="dom">07526983002278 (10) · 37930861000189 (1)</span></td></tr>
+<tr><td class="col-name">nome_fundo_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Fundo Repassador do Plano de Ação</td><td class="col-ex">Fundo Repassador Ministério da Cidades.<span class="dom">FUNDO DE AMPARO AO TRABA… (10) · FUNDO NACIONAL DA CULTUR… (4) · Fundo Repassador Ministé… (1)</span></td></tr>
+<tr><td class="col-name">uf_fundo_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Fundo Repassador do Plano de Ação</td><td class="col-ex">DF<span class="dom">DF (15)</span></td></tr>
+<tr><td class="col-name">municipio_fundo_repassador_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Fundo Repassador do Plano de Ação</td><td class="col-ex">BRASÍLIA<span class="dom">BRASÍLIA (15)</span></td></tr>
+<tr><td class="col-name">codigo_ibge_fundo_repassador_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código IBGE do Município do Fundo Repassador do Plano de Ação</td><td class="col-ex">5300108<span class="dom">5300108 (15)</span></td></tr>
+<tr><td class="col-name">cnpj_ente_recebedor_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Ente Recebedor do Plano de Ação</td><td class="col-ex">46523239000147<span class="dom">46523239000147 (15)</span></td></tr>
+<tr><td class="col-name">nome_ente_recebedor_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Ente Recebedor do Plano de Ação</td><td class="col-ex">MUNICIPIO DE SAO BERNARDO DO CAMPO<span class="dom">MUNICIPIO DE SAO BERNARD… (15)</span></td></tr>
+<tr><td class="col-name">uf_ente_recebedor_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Ente Recebedor do Plano de Ação</td><td class="col-ex">SP<span class="dom">SP (15)</span></td></tr>
+<tr><td class="col-name">nome_municipio_ente_recebedor_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Ente Recebedor do Plano de Ação</td><td class="col-ex">SÃO BERNARDO DO CAMPO<span class="dom">SÃO BERNARDO DO CAMPO (15)</span></td></tr>
+<tr><td class="col-name">codigo_ibge_municipio_ente_recebedor_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código IBGE do Município do Ente Recebedor do Plano de Ação</td><td class="col-ex">3548708<span class="dom">3548708 (15)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_unidade_ente_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo da Unidade do Ente do Plano de Ação</td><td class="col-ex">Ente Municipal<span class="dom">Ente Municipal (15)</span></td></tr>
+<tr><td class="col-name">cnpj_fundo_vinculado_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Fundo Vinculado ao Plano de Ação</td><td class="col-ex">35810716000139<span class="dom">35810716000139 (10)</span></td></tr>
+<tr><td class="col-name">nome_fundo_vinculado_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Fundo Vinculado ao Plano de Ação</td><td class="col-ex">FUNDO DO TRABALHO DE SAO BERNARDO DO CAMPO<span class="dom">FUNDO DO TRABALHO DE SAO… (10) · Fundo de Assistência à C… (4)</span></td></tr>
+<tr><td class="col-name">uf_fundo_vinculado_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Sigla da Unidade da Federação do Fundo Vinculado ao Plano de Ação</td><td class="col-ex">SP<span class="dom">SP (14)</span></td></tr>
+<tr><td class="col-name">municipio_fundo_vinculado_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Município do Fundo Vinculado ao Plano de Ação</td><td class="col-ex">SÃO BERNARDO DO CAMPO<span class="dom">SÃO BERNARDO DO CAMPO (14)</span></td></tr>
+<tr><td class="col-name">codigo_ibge_fundo_vinculado_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código IBGE do Município do Fundo Vinculado ao Plano de Ação</td><td class="col-ex">3548708<span class="dom">3548708 (14)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_unidade_recebedora_vinculada_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo da Unidade Recebedora Vinculada ao Plano de Ação</td><td class="col-ex">Fundo<span class="dom">Fundo (14)</span></td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_metas_faf" data-eixo="pactuado" style="--ec:var(--e-pactuado)">
+<div class="card-head">
+<h2>planos_acao_metas_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Metas dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">O que foi pactuado</span>
+<span class="pill">8 colunas</span>
+<span class="pill reg">21 registros de SBC</span>
+<span class="pill">API: /planos-acao-metas</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← planos_acao_metas_acoes_faf</b> por id_meta_plano_acao</span>
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Meta do Plano de Ação</td><td class="col-ex">4238</td></tr>
+<tr><td class="col-name">numero_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número da Meta do Plano de Ação (Letra &quot;M&quot; seguida do Sequencial da Meta do Plano de Ação)</td><td class="col-ex">M1<span class="dom">M1 (14) · M2 (4) · M3 (2) · M4 (1)</span></td></tr>
+<tr><td class="col-name">nome_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Meta do Plano de Ação</td><td class="col-ex">INCISO II - Subsídio para a manutenção de espaço…</td></tr>
+<tr><td class="col-name">descricao_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Meta do Plano de Ação</td><td class="col-ex">Subsídio de até 39 espaços culturais para a manu…</td></tr>
+<tr><td class="col-name">valor_meta_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Somatório dos Valores das Ações da Meta do Plano de Ação</td><td class="col-ex">400000.0</td></tr>
+<tr><td class="col-name">versao_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Versão da Meta do Plano de Ação</td><td class="col-ex">3</td></tr>
+<tr><td class="col-name">sequencial_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número Sequencial da Meta do Plano de Ação</td><td class="col-ex">1<span class="dom">1 (14) · 2 (4) · 3 (2) · 4 (1)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_destinacao_recursos_faf" data-eixo="pactuado" style="--ec:var(--e-pactuado)">
+<div class="card-head">
+<h2>planos_acao_destinacao_recursos_faf</h2>
+<div class="desc-oficial">Tabela que armazena a Destinação de Recursos dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">O que foi pactuado</span>
+<span class="pill">6 colunas</span>
+<span class="pill reg">29 registros de SBC</span>
+<span class="pill">API: /planos-acao-destinacao-recursos</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_destinacao_recursos_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Item de Despesa Cadastrado no Plano de Ação</td><td class="col-ex">4269</td></tr>
+<tr><td class="col-name">codigo_natureza_despesa_destinacao_recursos_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Natureza de Despesa no SIAFI do Item de Despesa Cadastrado no Plano de Ação</td><td class="col-ex">335043</td></tr>
+<tr><td class="col-name">descricao_natureza_despesa_destinacao_recursos_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Natureza de Despesa no SIAFI do Item de Despesa Cadastrado no Plano de Ação</td><td class="col-ex">SUBVENCOES SOCIAIS</td></tr>
+<tr><td class="col-name">tipo_despesa_destinacao_recursos_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo da Natureza de Despesa do Item de Despesa Cadastrado no Plano de Ação</td><td class="col-ex">CUSTEIO<span class="dom">CUSTEIO (27) · INVESTIMENTO (2)</span></td></tr>
+<tr><td class="col-name">valor_destinacao_recursos_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor do Recurso destinado ao Item de Despesa Cadastrado no Plano de Ação</td><td class="col-ex">290000.0</td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_historico_faf" data-eixo="analise" style="--ec:var(--e-analise)">
+<div class="card-head">
+<h2>planos_acao_historico_faf</h2>
+<div class="desc-oficial">Tabela que armazena o Histórico das Situações dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Trâmite e aprovação</span>
+<span class="pill">6 colunas</span>
+<span class="pill reg">205 registros de SBC</span>
+<span class="pill">API: /planos-acao-historico</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← planos_acao_analises_faf</b> por id_historico_plano_acao</span>
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_historico_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Histórico do Plano de Ação</td><td class="col-ex">353</td></tr>
+<tr><td class="col-name">situacao_historico_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Histórico do Plano de Ação</td><td class="col-ex">EM_ELABORACAO</td></tr>
+<tr><td class="col-name">cpf_historico_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CPF do Responsável pelo Registro no Histórico do Plano de Ação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">data_historico_plano_acao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Registro no Histórico do Plano de Ação</td><td class="col-ex">2020-08-07</td></tr>
+<tr><td class="col-name">versao_historico_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Versão do Histórico do Plano de Ação</td><td class="col-ex">0<span class="dom">0 (205)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_analises_faf" data-eixo="analise" style="--ec:var(--e-analise)">
+<div class="card-head">
+<h2>planos_acao_analises_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Análises dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Trâmite e aprovação</span>
+<span class="pill">9 colunas</span>
+<span class="pill reg">76 registros de SBC</span>
+<span class="pill">API: /planos-acao-analises</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+<span class="rel"><b>→ planos_acao_historico_faf</b> por id_historico_plano_acao</span>
+<span class="rel"><b>← planos_acao_analises_responsaveis_faf</b> por id_analise_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_analise_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Análise do Plano de Ação</td><td class="col-ex">1688</td></tr>
+<tr><td class="col-name">tipo_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo de Análise do Plano de Ação (&quot;MERITO&quot;, &quot;TECNICA&quot;, &quot;FINANCEIRA&quot;, &quot;TECNICA_FINANCEIRA&quot;)</td><td class="col-ex">MERITO<span class="dom">MERITO (45) · TECNICA_FINANCEIRA (24) · TECNICA (7)</span></td></tr>
+<tr><td class="col-name">resultado_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo de Resultado da Análise do Plano de Ação (&quot;COMPLEMENTACAO&quot;, &quot;APROVADO&quot;, &quot;COM_RESSALVA&quot;, &quot;REJEITADO&quot;)</td><td class="col-ex">COMPLEMENTACAO<span class="dom">APROVADO (51) · COMPLEMENTACAO (23) · REJEITADO (2)</span></td></tr>
+<tr><td class="col-name">data_analise_plano_acao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data da Análise do Plano de Ação</td><td class="col-ex">2020-09-11</td></tr>
+<tr><td class="col-name">parecer_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Parecer da Análise do Plano de Ação</td><td class="col-ex">Município solicitou por telefone o retorno do pl…</td></tr>
+<tr><td class="col-name">cpf_responsavel_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CPF do Responsável pela Análise do Plano de Ação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">origem_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo de Origem da Análise realizada no Plano de Ação</td><td class="col-ex">REPASSADOR<span class="dom">REPASSADOR (52) · CONSELHO (24)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+<tr><td class="col-name">id_historico_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao_historico</span></td><td class="col-desc">Identificador Único do Histórico do Plano de Ação</td><td class="col-ex">7327</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-termos_adesao_faf" data-eixo="analise" style="--ec:var(--e-analise)">
+<div class="card-head">
+<h2>termos_adesao_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Termos de Adesão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Trâmite e aprovação</span>
+<span class="pill">10 colunas</span>
+<span class="pill reg">14 registros de SBC</span>
+<span class="pill">API: /termos-adesao</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+<span class="rel"><b>← termos_adesao_historico_faf</b> por id_termo_adesao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_termo_adesao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Termo de Adesão</td><td class="col-ex">1497</td></tr>
+<tr><td class="col-name">numero_processo_termo_adesao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número do Processo do Termo de Adesão</td><td class="col-ex">72031.008688/2020-71</td></tr>
+<tr><td class="col-name">situacao_termo_adesao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Termo de Adesão (Podendo ser: &quot;Em Elaboração&quot;; &quot;Enviado para o Recebedor&quot;; &quot;Assinado&quot;)</td><td class="col-ex">ASSINADO<span class="dom">ASSINADO (14)</span></td></tr>
+<tr><td class="col-name">objeto_termo_adesao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Objeto do Termo de Adesão</td><td class="col-ex">Para repasse da Lei 14.017/2020</td></tr>
+<tr><td class="col-name">data_assinatura_termo_adesao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Assinatura do Termo de Adesão</td><td class="col-ex">2020-08-18</td></tr>
+<tr><td class="col-name">ano_termo_adesao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Ano do Termo de Adesão</td><td class="col-ex">2020<span class="dom">2024 (5) · 2023 (4) · 2022 (3) · 2020 (1) · 2025 (1)</span></td></tr>
+<tr><td class="col-name">secao_publicacao_dou_termo_adesao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Seção no DOU (Diário Oficial da União) do Termo de Adesão</td><td class="col-ex">1<span class="dom">3 (9) · 1 (5)</span></td></tr>
+<tr><td class="col-name">pagina_publicacao_dou_termo_adesao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Página no DOU (Diário Oficial da União) do Termo de Adesão</td><td class="col-ex">5<span class="dom">58 (8) · 5 (3) · 208 (1) · 68 (1) · 2 (1)</span></td></tr>
+<tr><td class="col-name">data_publicacao_dou_termo_adesao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data da Publicação no DOU (Diário Oficial da União) do Termo de Adesão</td><td class="col-ex">2020-08-18<span class="dom">2019-10-25 (9) · 2023-10-19 (2) · 2020-08-18 (1) · 2022-08-30 (1) · 2023-05-12 (1)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-relatorios_gestao_faf" data-eixo="prestacao" style="--ec:var(--e-prestacao)">
+<div class="card-head">
+<h2>relatorios_gestao_faf</h2>
+<div class="desc-oficial">Tabela que armazena os dados dos Relatórios de Gestão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Prestação de contas</span>
+<span class="pill">14 colunas</span>
+<span class="pill reg">19 registros de SBC</span>
+<span class="pill">API: /relatorios-gestao</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← relatorios_gestao_acoes_faf</b> por id_relatorio_gestao</span>
+<span class="rel"><b>← relatorios_gestao_analises_faf</b> por id_relatorio_gestao</span>
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_relatorio_gestao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Relatório de Gestão</td><td class="col-ex">3175</td></tr>
+<tr><td class="col-name">data_relatorio_gestao</td><td><span class="tchip date">date</span></td><td></td><td class="col-desc">Data do Envio do Relatório de Gestão</td><td class="col-ex">2022-12-21</td></tr>
+<tr><td class="col-name">data_e_hora_relatorio_gestao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data e Hora do Envio do Relatório de Gestão</td><td class="col-ex">2022-12-21T16:12:23</td></tr>
+<tr><td class="col-name">tipo_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo do Relatório de Gestão: (&quot;PARCIAL&quot; ou &quot;FINAL&quot;)</td><td class="col-ex">FINAL<span class="dom">FINAL (13) · PARCIAL (6)</span></td></tr>
+<tr><td class="col-name">situacao_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Relatório de Gestão: (&quot;EM_ELABORACAO&quot;, &quot;ENVIADO_ANALISE_CONSELHO&quot;, &quot;ENVIADO_ANALISE&quot;, &quot;EM_COMPLEMENTACAO&quot;, &quot;ANALISE_CONCLUIDA_CONSELHO&quot;, &quot;ANALISE_CONCLUIDA&quot; ou &quot;REJEITADO&quot;)</td><td class="col-ex">EM_COMPLEMENTACAO<span class="dom">APROVADO (11) · EM_COMPLEMENTACAO (4) · ENVIADO_ANALISE (4)</span></td></tr>
+<tr><td class="col-name">valor_executado_relatorio_gestao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Repassado do Relatório de Gestão</td><td class="col-ex">0.0<span class="dom">0.0 (14) · 6627863.13 (1) · 51003.46 (1) · 2796.54 (1) · 465943.77 (1) · 5150381.6 (1)</span></td></tr>
+<tr><td class="col-name">valor_pendente_relatorio_gestao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Pendente do Relatório de Gestão</td><td class="col-ex">0.0</td></tr>
+<tr><td class="col-name">resultados_alcancados_metas_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Resultados Alcançados das Metas do Relatório de Gestão</td><td class="col-ex">Meta 1 – Subsídio para a manutenção de Espaços A…</td></tr>
+<tr><td class="col-name">descritivo_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descritivo do Parecer do Relatório de Gestão</td><td class="col-ex">A execução da Meta 2 representou um grande suces…</td></tr>
+<tr><td class="col-name">contrapartida_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Contrapartida do Relatório de Gestão</td><td class="col-ex">Pactuação de não elevação ou redução das tarifas…<span class="dom">Foram utilizados recurso… (2) · Pactuação de não elevaçã… (1) · Foram aportados recursos… (1) · Ao longo da execução do … (1) · O valor previsto para co… (1)</span></td></tr>
+<tr><td class="col-name">endereco_eletronico_publicidade_acoes_relatorio_gestao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">URL de Publicidade das Ações Pactuadas no Relatório de Gestão</td><td class="col-ex">https://www.saobernardo.sp.gov.br/web/cultura/al…<span class="dom">https://www.saobernardo.… (10) · https://fundos.transfere… (5) · https://fundos.plataform… (4)</span></td></tr>
+<tr><td class="col-name">declaracao_conformidade_relatorio_gestao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Indicador da Declaração de Conformidade do Relatório de Gestão</td><td class="col-ex">True<span class="dom">True (19)</span></td></tr>
+<tr><td class="col-name">ultima_versao_relatorio</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Última Versão do Relatório de Gestão</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_dados_bancarios_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>planos_acao_dados_bancarios_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Dados Bancários dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">12 colunas</span>
+<span class="pill reg">25 registros de SBC</span>
+<span class="pill">API: /planos-acao-dados-bancarios</span>
+</div></div>
+<div class="rels">
+<span class="rel imp"><b>→ gestao_financeira_saldo_conta_faf</b> por id_agencia_conta (inferida)</span>
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_plano_acao_dado_bancario</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Dado Bancário do Plano de Ação</td><td class="col-ex">202</td></tr>
+<tr><td class="col-name">codigo_banco</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Banco do Plano de Ação</td><td class="col-ex">001<span class="dom">001 (25)</span></td></tr>
+<tr><td class="col-name">nome_banco</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Banco do Plano de Ação</td><td class="col-ex">Banco do Brasil<span class="dom">Banco do Brasil (25)</span></td></tr>
+<tr><td class="col-name">id_agencia_conta</td><td><span class="tchip text">varchar</span></td><td><span class="flag">NOT NULL</span> <span class="flag imp">~FK→gestao_financeira_saldo_conta</span></td><td class="col-desc">Identificador Único da Conta Bancária (Número da Agência Bancária seguida do Número da Conta Bancária) do Plano de Ação</td><td class="col-ex">0427-67242</td></tr>
+<tr><td class="col-name">numero_agencia</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Agência Bancária do Plano de Ação</td><td class="col-ex">0427<span class="dom">0427 (25)</span></td></tr>
+<tr><td class="col-name">dv_agencia</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador da Agência Bancária do Plano de Ação</td><td class="col-ex">8<span class="dom">8 (25)</span></td></tr>
+<tr><td class="col-name">numero_conta</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Conta Bancária do Plano de Ação</td><td class="col-ex">67242</td></tr>
+<tr><td class="col-name">dv_conta</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador da Conta Bancária do Plano de Ação</td><td class="col-ex">4</td></tr>
+<tr><td class="col-name">situacao_conta</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação da Conta Bancária do Plano de Ação</td><td class="col-ex">Conta Ativa<span class="dom">Conta Ativa (24) · Aguardando Aprovação do … (1)</span></td></tr>
+<tr><td class="col-name">data_abertura_conta</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Abertura da Conta Bancária do Plano de Ação</td><td class="col-ex">2020-09-14</td></tr>
+<tr><td class="col-name">nome_programa_agil_conta</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Programa Ágil da Conta Bancária do Plano de Ação</td><td class="col-ex">SECULT-A BLANC-MUN</td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-empenhos_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>empenhos_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Dados dos Empenhos FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">30 colunas</span>
+<span class="pill reg">1 registros de SBC</span>
+<span class="pill">API: /empenhos</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_faf</b> por id_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_empenho</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Nota de Empenho</td><td class="col-ex">11408<span class="dom">11408 (1)</span></td></tr>
+<tr><td class="col-name">numero_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número da Nota de Empenho gerada e enviada pelo SIAFI (Sistema Integrado de Administração Financeira)</td><td class="col-ex">2020NE000063<span class="dom">2020NE000063 (1)</span></td></tr>
+<tr><td class="col-name">ano_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Ano do Empenho</td><td class="col-ex">2020<span class="dom">2020 (1)</span></td></tr>
+<tr><td class="col-name">gestao_emitente_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Gestão Emitente no SIAFI</td><td class="col-ex">00001<span class="dom">00001 (1)</span></td></tr>
+<tr><td class="col-name">ug_emitente</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Unidade Gestora Emitente no SIAFI</td><td class="col-ex">540035<span class="dom">540035 (1)</span></td></tr>
+<tr><td class="col-name">dt_emissao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data da Emissão da Nota de Empenho</td><td class="col-ex">2021-01-08<span class="dom">2021-01-08 (1)</span></td></tr>
+<tr><td class="col-name">fonte_recurso</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Fonte de Recurso da Nota de Empenho no SIAFI</td><td class="col-ex">144000000<span class="dom">144000000 (1)</span></td></tr>
+<tr><td class="col-name">esfera_orcamentaria_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Indicador da Esfera Orçamentária podendo assumir os seguintes valores: (&quot;0&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot; ou &quot;5&quot;)</td><td class="col-ex">1<span class="dom">1 (1)</span></td></tr>
+<tr><td class="col-name">descricao_esfera_orcamentaria_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Indicador da Esfera Orçamentária podendo assumir os seguintes valores: (0 - &quot;Federal&quot;, 1 - &quot;Estadual&quot;; 2 - &quot;Municipal&quot;; 3 - &quot;Estatal&quot;; 4 - &quot;Privada&quot;; 5 - &quot;Organismos Internacionais&quot;)</td><td class="col-ex">Estadual<span class="dom">Estadual (1)</span></td></tr>
+<tr><td class="col-name">plano_interno_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Instrumento de planejamento e de acompanhamento da ação planejada, usado como forma de detalhamento desta, de uso exclusivo de cada Ministério/órgão, com as seguintes características: - Há um atributo na tabela de órgão para indicar se o órgão utiliza ou não o Plano Interno (PI). Este atributo é mantido pela STN decorrente da solicitação do órgão. - A unidade setorial de orçamento do órgão é responsável por registrar na tabela os códigos de PI. - O SIAFI (Sistema Integrado de Administração Financeira), de acordo com o cadastramento previsto acima, só aceitará a emissão de nota de empenho com o código de PI existente. - Os códigos de PI poderão ter até 11 (onze) posições alfa-numéricas</td><td class="col-ex">0929CEAUXEM<span class="dom">0929CEAUXEM (1)</span></td></tr>
+<tr><td class="col-name">unidade_gestora_responsavel_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Unidade Gestora do Favorecido</td><td class="col-ex">540030<span class="dom">540030 (1)</span></td></tr>
+<tr><td class="col-name">observacao_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Observação referente a Nota de Empenho informada pelo usuário</td><td class="col-ex">PAGAMENTO DE AUXÍLIO EMERGENCIAL, CONFORME LEI 1…<span class="dom">PAGAMENTO DE AUXÍLIO EME… (1)</span></td></tr>
+<tr><td class="col-name">cnpj_favorecido_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Favorecido</td><td class="col-ex">00000000000191<span class="dom">00000000000191 (1)</span></td></tr>
+<tr><td class="col-name">numero_lista_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número da Lista gerado e enviado pelo SIAFI</td><td class="col-ex">2020LI000077<span class="dom">2020LI000077 (1)</span></td></tr>
+<tr><td class="col-name">unidade_gestora_referencia_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Unidade Gestora de referência no SIAFI</td><td class="col-ex">540035<span class="dom">540035 (1)</span></td></tr>
+<tr><td class="col-name">gestao_referencia_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Gestão de referência no SIAFI</td><td class="col-ex">00001<span class="dom">00001 (1)</span></td></tr>
+<tr><td class="col-name">numero_interno_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número Interno Sequencial</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">objeto_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Objeto da Nota de Empenho informado pelo usuário</td><td class="col-ex">PAGAMENTO DE AUXÍLIO EMERGENCIAL, CONFORME LEI 1…<span class="dom">PAGAMENTO DE AUXÍLIO EME… (1)</span></td></tr>
+<tr><td class="col-name">numero_sistema_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Campo preenchido com Nota de Sistema &quot;NS&quot; ou Nota de Lançamento &quot;NL&quot;, pelo usuário, sobre Nota de Empenho registrada diretamente no SIAFI (Sistema Integrado de Administração Financeira)</td><td class="col-ex">2020NS000500<span class="dom">2020NS000500 (1)</span></td></tr>
+<tr><td class="col-name">natureza_despesa</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador da tabela de Natureza Despesa, recuperado do SICONV</td><td class="col-ex">334041<span class="dom">334041 (1)</span></td></tr>
+<tr><td class="col-name">natureza_despesa_sub_item_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Identificador da tabela de Natureza Despesa Subitem, recuperado do SICONV</td><td class="col-ex">(sempre vazio)</td></tr>
+<tr><td class="col-name">tipo_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Tipo de Empenho podendo assumir os valores: (&quot;1&quot;, &quot;3&quot; ou &quot;5&quot;)</td><td class="col-ex">1<span class="dom">1 (1)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo de Empenho podendo assumir os valores: (1 - &quot;Empenho Ordinário&quot;; 3 - &quot;Estimado&quot;; 5 - &quot;Global&quot;)</td><td class="col-ex">Empenho Ordinário<span class="dom">Empenho Ordinário (1)</span></td></tr>
+<tr><td class="col-name">codigo_tipo_nota_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Tipo da Nota de Empenho</td><td class="col-ex">01<span class="dom">01 (1)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_nota_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo da Nota de Empenho</td><td class="col-ex">Empenho Original<span class="dom">Empenho Original (1)</span></td></tr>
+<tr><td class="col-name">situacao_empenho</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Situação da Nota de Empenho, podendo assumir os valores: (&quot;1&quot;, &quot;4&quot;, &quot;5&quot; ou &quot;6&quot;)</td><td class="col-ex">6<span class="dom">6 (1)</span></td></tr>
+<tr><td class="col-name">descricao_situacao_empenho</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Situação da Nota de Empenho, podendo assumir os valores: (1 - &quot;Minuta de Empenho&quot;; 4 - &quot;Enviado&quot;; 5 - &quot;Pendente&quot;; 6 - &quot;Registrado no SIAFI&quot;)</td><td class="col-ex">Registrado no SIAFI<span class="dom">Registrado no SIAFI (1)</span></td></tr>
+<tr><td class="col-name">valor_empenho</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor Total da Nota de Empenho</td><td class="col-ex">4991686.4<span class="dom">4991686.4 (1)</span></td></tr>
+<tr><td class="col-name">versao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Versão da Nota de Empenho</td><td class="col-ex">2<span class="dom">2 (1)</span></td></tr>
+<tr><td class="col-name">id_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao</span></td><td class="col-desc">Identificador Único do Plano de Ação</td><td class="col-ex">283<span class="dom">283 (1)</span></td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_metas_acoes_faf" data-eixo="pactuado" style="--ec:var(--e-pactuado)">
+<div class="card-head">
+<h2>planos_acao_metas_acoes_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Ações das Metas dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">O que foi pactuado</span>
+<span class="pill">8 colunas</span>
+<span class="pill reg">47 registros de SBC</span>
+<span class="pill">API: /planos-acao-metas-acoes</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_metas_faf</b> por id_meta_plano_acao</span>
+<span class="rel"><b>← relatorios_gestao_acoes_faf</b> por id_acao_meta_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_acao_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Ação da Meta do Plano de Ação</td><td class="col-ex">6468</td></tr>
+<tr><td class="col-name">numero_acao_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número da Ação da Meta do Plano de Ação (Letra &quot;A&quot; seguida do sequencial da Meta do Plano de Ação, seguido de &quot;.&quot;, seguida do Sequencial da Ação da Meta do Plano de Ação)</td><td class="col-ex">A1.1</td></tr>
+<tr><td class="col-name">nome_acao_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Ação da Meta do Plano de Ação</td><td class="col-ex">Subsidio de 2 parcelas de  R$ 3.000,00 ou R$6.00…</td></tr>
+<tr><td class="col-name">descricao_acao_meta_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Ação da Meta do Plano de Ação</td><td class="col-ex">Subsidio de 2 parcelas de  R$ 3.000,00 ou R$6.00…</td></tr>
+<tr><td class="col-name">valor_acao_meta_plano_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor da Ação da Meta do Plano de Ação</td><td class="col-ex">400000.0</td></tr>
+<tr><td class="col-name">versao_acao_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Versão da Ação da Meta do Plano de Ação</td><td class="col-ex">2<span class="dom">2 (21) · 1 (15) · 0 (7) · 3 (2) · 7 (1) · 4 (1)</span></td></tr>
+<tr><td class="col-name">sequencial_acao_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número Sequencial da Ação da Meta do Plano de Ação</td><td class="col-ex">1</td></tr>
+<tr><td class="col-name">id_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao_metas</span></td><td class="col-desc">Identificador Único da Meta do Plano de Ação</td><td class="col-ex">4238</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-planos_acao_analises_responsaveis_faf" data-eixo="analise" style="--ec:var(--e-analise)">
+<div class="card-head">
+<h2>planos_acao_analises_responsaveis_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Responsáveis pelas Análises dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Trâmite e aprovação</span>
+<span class="pill">4 colunas</span>
+<span class="pill reg">92 registros de SBC</span>
+<span class="pill">API: /planos-acao-analises-responsaveis</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ planos_acao_analises_faf</b> por id_analise_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_analise_responsavel_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Responsável pela Análise do Plano de Ação</td><td class="col-ex">1731</td></tr>
+<tr><td class="col-name">nome_responsavel_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Responsável pela Análise do Plano de Ação</td><td class="col-ex">BERNARDO BOGHOSSIAN AGUIAR</td></tr>
+<tr><td class="col-name">cargo_responsavel_analise_plano_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Cargo do Responsável pela Análise do Plano de Ação</td><td class="col-ex">secretário executivo<span class="dom">secretário executivo (12) · CONSELHEIRO_TITULAR (12) · CONSELHEIRO_SUPLENTE (11) · Agente administrativo (7) · PRESIDENTE (4)</span></td></tr>
+<tr><td class="col-name">id_analise_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao_analises</span></td><td class="col-desc">Identificador Único da Análise do Plano de Ação</td><td class="col-ex">1688</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-termos_adesao_historico_faf" data-eixo="analise" style="--ec:var(--e-analise)">
+<div class="card-head">
+<h2>termos_adesao_historico_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Históricos dos Termos de Adesão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Trâmite e aprovação</span>
+<span class="pill">5 colunas</span>
+<span class="pill reg">42 registros de SBC</span>
+<span class="pill">API: /termos-adesao-historico</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ termos_adesao_faf</b> por id_termo_adesao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_historico_termo_adesao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Histórico do Termo de Adesão</td><td class="col-ex">3703</td></tr>
+<tr><td class="col-name">situacao_historico_termo_adesao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Situação do Histórico do Termo de Adesão</td><td class="col-ex">EM ELABORACAO<span class="dom">EM ELABORACAO (14) · ENVIADO (14) · ASSINADO (14)</span></td></tr>
+<tr><td class="col-name">cpf_historico_termo_adesao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CPF do Responsável pelo Registro no Histórico do Termo de Adesão</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">data_historico_termo_adesao</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Registro no Histórico do Termo de Adesão</td><td class="col-ex">2020-09-15</td></tr>
+<tr><td class="col-name">id_termo_adesao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→termos_adesao</span></td><td class="col-desc">Identificador Único do Termo de Adesão</td><td class="col-ex">1497</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-relatorios_gestao_acoes_faf" data-eixo="prestacao" style="--ec:var(--e-prestacao)">
+<div class="card-head">
+<h2>relatorios_gestao_acoes_faf</h2>
+<div class="desc-oficial">Tabela que armazena os dados das Ações dos Relatórios de Gestão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Prestação de contas</span>
+<span class="pill">5 colunas</span>
+<span class="pill reg">47 registros de SBC</span>
+<span class="pill">API: /relatorios-gestao-acoes</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ relatorios_gestao_faf</b> por id_relatorio_gestao</span>
+<span class="rel"><b>→ planos_acao_metas_acoes_faf</b> por id_acao_meta_plano_acao</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_acao_relatorio_gestao</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Ação associada ao Relatório de Gestão</td><td class="col-ex">2176</td></tr>
+<tr><td class="col-name">percentual_execucao_fisica_acao_relatorio_gestao_acao</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Percentual de Conclusão da Ação do Relatório de Gestão</td><td class="col-ex">100.0<span class="dom">100.0 (45) · 0.0 (2)</span></td></tr>
+<tr><td class="col-name">observacoes_justificativas_relatorio_gestao_acao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Justificativa referente ao Percentual de Conclusão da Ação do Relatório de Gestão</td><td class="col-ex">Foi publicado Edital GSC 002/2020 – Subsídio par…</td></tr>
+<tr><td class="col-name">id_relatorio_gestao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→relatorios_gestao</span></td><td class="col-desc">Identificador Único do Relatório de Gestão</td><td class="col-ex">1059</td></tr>
+<tr><td class="col-name">id_acao_meta_plano_acao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→planos_acao_metas_acoes</span></td><td class="col-desc">Identificador Único da Ação da Meta do Plano de Ação</td><td class="col-ex">22536</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-relatorios_gestao_analises_faf" data-eixo="prestacao" style="--ec:var(--e-prestacao)">
+<div class="card-head">
+<h2>relatorios_gestao_analises_faf</h2>
+<div class="desc-oficial">Tabela que armazena os dados das Análises dos Relatórios de Gestão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Prestação de contas</span>
+<span class="pill">8 colunas</span>
+<span class="pill reg">38 registros de SBC</span>
+<span class="pill">API: /relatorios-gestao-analises</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ relatorios_gestao_faf</b> por id_relatorio_gestao</span>
+<span class="rel"><b>← relatorios_gestao_analises_responsaveis_faf</b> por id_relatorio_gestao_analise</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_relatorio_gestao_analise</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Análise do Relatório de Gestão</td><td class="col-ex">70</td></tr>
+<tr><td class="col-name">tipo_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo de Análise realizada no Relatório de Gestão</td><td class="col-ex">RELATORIO_GESTAO<span class="dom">RELATORIO_GESTAO (38)</span></td></tr>
+<tr><td class="col-name">resultado_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo do Resultado da Análise do Relatório de Gestão</td><td class="col-ex">COMPLEMENTACAO<span class="dom">APROVADO (26) · COMPLEMENTACAO (11) · COM_RESSALVA (1)</span></td></tr>
+<tr><td class="col-name">parecer_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Parecer da Análise do Relatório de Gestão</td><td class="col-ex">Esta coordenação solicita:Anexar parecer do cons…</td></tr>
+<tr><td class="col-name">origem_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo de Origem da Análise realizada no Relatório de Gestão</td><td class="col-ex">REPASSADOR<span class="dom">REPASSADOR (23) · CONSELHO (15)</span></td></tr>
+<tr><td class="col-name">data_analise_relatorio_gestao_analise</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data de Realização da Análise no Relatório de Gestão</td><td class="col-ex">2022-03-23</td></tr>
+<tr><td class="col-name">versao_analise_relatorio_gestao_analise</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Versão da Análise do Relatório de Gestão</td><td class="col-ex">0<span class="dom">0 (22) · 1 (10) · 2 (5) · 3 (1)</span></td></tr>
+<tr><td class="col-name">id_relatorio_gestao</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→relatorios_gestao</span></td><td class="col-desc">Identificador Único do Relatório de Gestão</td><td class="col-ex">1059</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-gestao_financeira_saldo_conta_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>gestao_financeira_saldo_conta_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Dados dos Saldos em Conta dos Planos de Ação FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">4 colunas</span>
+<span class="pill emb">sem endpoint próprio</span>
+<span class="pill">API: embutida em /planos-acao-dados-bancarios</span>
+</div></div>
+<div class="rels">
+<span class="rel imp"><b>← gestao_financeira_lancamentos_faf</b> por id_agencia_conta (inferida)</span>
+<span class="rel imp"><b>← planos_acao_dados_bancarios_faf</b> por id_agencia_conta (inferida)</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_agencia_conta</td><td><span class="tchip text">varchar</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Conta Bancária (Número da Agência Bancária seguida do Número da Conta Bancária) do Plano de Ação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">agencia_batch</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Agência Bancária do Saldo</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">conta_batch</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Conta Bancária do Saldo</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">saldo_final_gestao_financeira</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Saldo Final da Conta Bancária</td><td class="col-ex">—</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-gestao_financeira_lancamentos_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>gestao_financeira_lancamentos_faf</h2>
+<div class="desc-oficial">Tabela que armazena os Lançamentos da Gestão Financeira FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">33 colunas</span>
+<span class="pill reg">969 registros de SBC</span>
+<span class="pill">API: /gestao-financeira-lancamentos</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← gestao_financeira_lancamentos_categorias_despesa_faf</b> por id_lancamento_gestao_financeira</span>
+<span class="rel imp"><b>→ gestao_financeira_saldo_conta_faf</b> por id_agencia_conta (inferida)</span>
+<span class="rel"><b>← gestao_financeira_subtransacoes_faf</b> por id_lancamento_gestao_financeira</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_lancamento_gestao_financeira</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Lançamento</td><td class="col-ex">497375</td></tr>
+<tr><td class="col-name">origem_solicitacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Origem da solicitação de abertura de contas</td><td class="col-ex">TFF<span class="dom">TFF (969)</span></td></tr>
+<tr><td class="col-name">descricao_origem_solicitacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Origem da solicitação de abertura de contas</td><td class="col-ex">Transferências Fundo a Fundo<span class="dom">Transferências Fundo a F… (969)</span></td></tr>
+<tr><td class="col-name">cnpj_ente_solicitante_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">CNPJ do Ente Solicitante da Conta Bancária</td><td class="col-ex">46523239000147<span class="dom">46523239000147 (848) · 35810716000139 (121)</span></td></tr>
+<tr><td class="col-name">nome_ente_solicitante_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Ente Solicitante da Conta Bancária</td><td class="col-ex">MUNICIPIO DE SAO BERNARDO DO CAMPO<span class="dom">MUNICIPIO DE SAO BERNARD… (848) · FUNDO DO TRABALHO DE SAO… (121)</span></td></tr>
+<tr><td class="col-name">nome_personalizado_ente_solicitante_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome Personalizado do Ente Solicitante da Conta Bancária</td><td class="col-ex">Lei A Blanc-MUNICIPIO DE SAO BERNARDO DO CAMPO<span class="dom">MUNICIPIO DE SAO BERNARD… (475) · Lei A Blanc-MUNICIPIO DE… (373) · FUNDO DO TRABALHO DE SAO… (121)</span></td></tr>
+<tr><td class="col-name">codigo_programa_agil_ente_solicitante_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Programa Ágil cadastrado no BB</td><td class="col-ex">71</td></tr>
+<tr><td class="col-name">codigo_banco_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Banco do Lançamento</td><td class="col-ex">001<span class="dom">001 (969)</span></td></tr>
+<tr><td class="col-name">codigo_agencia_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Agência Bancária do Lançamento</td><td class="col-ex">0427<span class="dom">0427 (969)</span></td></tr>
+<tr><td class="col-name">dv_agencia_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador (DV) da Agência Bancária do Lançamento</td><td class="col-ex">8<span class="dom">8 (524)</span></td></tr>
+<tr><td class="col-name">codigo_conta_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Conta Corrente do Lançamento</td><td class="col-ex">67242</td></tr>
+<tr><td class="col-name">dv_conta_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador (DV) da Conta Corrente do Lançamento</td><td class="col-ex">4</td></tr>
+<tr><td class="col-name">tipo_operacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Tipo da Operação (&quot;D&quot; ou &quot;C&quot;)</td><td class="col-ex">C<span class="dom">D (670) · C (299)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_operacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo da Operação (&quot;Débito&quot; ou &quot;Crédito&quot;)</td><td class="col-ex">Crédito<span class="dom">Débito (670) · Crédito (299)</span></td></tr>
+<tr><td class="col-name">descricao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Lançamento</td><td class="col-ex">Ordem Bancria</td></tr>
+<tr><td class="col-name">data_lancamento_gestao_financeira</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Lançamento</td><td class="col-ex">2020-09-24</td></tr>
+<tr><td class="col-name">data_evento_lancamento_gestao_financeira</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Evento do Lançamento</td><td class="col-ex">2020-09-24</td></tr>
+<tr><td class="col-name">numero_ordem_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número de Ordem do Lançamento</td><td class="col-ex">1</td></tr>
+<tr><td class="col-name">numero_referencia_unica_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Número de Referência do Lançamento</td><td class="col-ex">3804251000005</td></tr>
+<tr><td class="col-name">tipo_favorecido_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Tipo do Favorecido (&quot;1&quot;, &quot;2&quot; ou &quot;0&quot;)</td><td class="col-ex">2<span class="dom">0 (404) · 1 (290) · 2 (275)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_favorecido_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo do Favorecido (1 - &quot;CPF&quot;, 2 - &quot;CNPJ&quot; ou 0 - &quot;Não Identificado&quot;)</td><td class="col-ex">CNPJ<span class="dom">Não Identificado (404) · CPF (290) · CNPJ (275)</span></td></tr>
+<tr><td class="col-name">doc_favorecido_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Identificação do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">doc_favorecido_gestao_financeira_mask</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Identificação Anonimizada do Favorecido do Lançamento</td><td class="col-ex">37930861000189</td></tr>
+<tr><td class="col-name">nome_favorecido_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Favorecido do Lançamento</td><td class="col-ex">FUNDO NACIONAL DA CULTURA</td></tr>
+<tr><td class="col-name">codigo_banco_favorecido_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Banco do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">codigo_agencia_favorecido_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Agência Bancária do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">dv_agencia_favorecido_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador (DV) da Agência Bancária do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">codigo_conta_favorecido_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Conta Bancária do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">dv_conta_favorecido_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Dígito Verificador (DV) da Conta Bancária do Favorecido do Lançamento</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">valor_gestao_financeira</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor do Lançamento</td><td class="col-ex">4991686.4</td></tr>
+<tr><td class="col-name">codigo_categoria_despesa_lancamento_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa do Lançamento</td><td class="col-ex">0</td></tr>
+<tr><td class="col-name">quantidade_subtransacoes_lancamento_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Quantidade de Subtransações do Lançamento</td><td class="col-ex">0</td></tr>
+<tr><td class="col-name">id_agencia_conta</td><td><span class="tchip text">varchar</span></td><td><span class="flag imp">~FK→gestao_financeira_saldo_conta</span></td><td class="col-desc">Identificador Único da Conta Bancária (Número da Agência Bancária seguida do Número da Conta Bancária) do Plano de Ação</td><td class="col-ex">0427-67242</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-relatorios_gestao_analises_responsaveis_faf" data-eixo="prestacao" style="--ec:var(--e-prestacao)">
+<div class="card-head">
+<h2>relatorios_gestao_analises_responsaveis_faf</h2>
+<div class="desc-oficial">Tabela que armazena os dados dos Responsáveis pelas Análises dos Relatórios de Gestão FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Prestação de contas</span>
+<span class="pill">4 colunas</span>
+<span class="pill reg">38 registros de SBC</span>
+<span class="pill">API: /relatorios-gestao-analises-responsaveis</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ relatorios_gestao_analises_faf</b> por id_relatorio_gestao_analise</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_relatorio_gestao_analise_responsavel</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único do Responsável pela Análise do Relatório de Gestão</td><td class="col-ex">256</td></tr>
+<tr><td class="col-name">nome_responsavel_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Responsável pela Análise do Relatório de Gestão</td><td class="col-ex">ADRIANA BIONDI VIEIRA</td></tr>
+<tr><td class="col-name">cargo_responsavel_analise_relatorio_gestao_analise</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Cargo do Responsável pela Análise do Relatório de Gestão</td><td class="col-ex">secretário executivo</td></tr>
+<tr><td class="col-name">id_relatorio_gestao_analise</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→relatorios_gestao_analises</span></td><td class="col-desc">Identificador Único da Análise do Relatório de Gestão</td><td class="col-ex">70</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-gestao_financeira_subtransacoes_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>gestao_financeira_subtransacoes_faf</h2>
+<div class="desc-oficial">Tabela que armazena os dados das Subtransações dos Lançamentos da Gestão Financeira FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">17 colunas</span>
+<span class="pill reg">1126 registros de SBC</span>
+<span class="pill">API: /gestao-financeira-subtransacoes</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>← gestao_financeira_subtransacoes_categorias_despesa_faf</b> por id_subtransacao_gestao_financeira</span>
+<span class="rel"><b>→ gestao_financeira_lancamentos_faf</b> por id_lancamento_gestao_financeira</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td><span class="flag">NOT NULL</span> <span class="flag">PK</span></td><td class="col-desc">Identificador Único da Subtransação</td><td class="col-ex">497512-187</td></tr>
+<tr><td class="col-name">estado_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Estado da Subtransação</td><td class="col-ex">3<span class="dom">3 (974) · 6 (98) · 2 (54)</span></td></tr>
+<tr><td class="col-name">situacao_pagamento_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Situação do Pagamento (&quot;3&quot; ou &quot;6&quot;) da Subtransação</td><td class="col-ex">3<span class="dom">3 (1007) · 6 (119)</span></td></tr>
+<tr><td class="col-name">descricao_situacao_pagamento_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Situação do Pagamento (3 - &quot;Pago&quot; ou 6 - &quot;Cancelado&quot;) da Subtransação</td><td class="col-ex">Pago<span class="dom">Pago (1007) · Cancelado (119)</span></td></tr>
+<tr><td class="col-name">data_pagamento_subtransacao_gestao_financeira</td><td><span class="tchip date">timestamp</span></td><td></td><td class="col-desc">Data do Pagamento da Subtransação</td><td class="col-ex">2020-12-21</td></tr>
+<tr><td class="col-name">tipo_pessoa_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Tipo do Favorecido (&quot;1&quot;, &quot;2&quot; ou &quot;0&quot;) da Subtransação</td><td class="col-ex">1<span class="dom">1 (777) · 2 (344) · 0 (5)</span></td></tr>
+<tr><td class="col-name">descricao_tipo_pessoa_beneficiario_subtransacao_gestao_financei</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição do Tipo do Favorecido (1 - &quot;CPF&quot;, 2 - &quot;CNPJ&quot; ou 0 - &quot;Não Identificado&quot;) da Subtransação</td><td class="col-ex">CPF<span class="dom">CPF (777) · CNPJ (344) · Não Identificado (5)</span></td></tr>
+<tr><td class="col-name">numero_documento_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Identificação do Favorecido da Subtransação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">numero_documento_beneficiario_subtransacao_gestao_financeira_ma</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Identificação Anonimizada do Favorecido da Subtransação</td><td class="col-ex">***61270***</td></tr>
+<tr><td class="col-name">nome_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do Favorecido da Subtransação</td><td class="col-ex">DANIEL PIRES</td></tr>
+<tr><td class="col-name">codigo_banco_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código do Banco do Favorecido da Subtransação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">codigo_agencia_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Agência Bancária do Favorecido da Subtransação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">codigo_conta_beneficiario_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Número da Conta Bancária do Favorecido da Subtransação</td><td class="col-ex">(não exposto pela API)</td></tr>
+<tr><td class="col-name">descricao_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Descrição da Subtransação</td><td class="col-ex">Pago<span class="dom">Pago (1007) · Cancelado (119)</span></td></tr>
+<tr><td class="col-name">valor_subtransacao_gestao_financeira</td><td><span class="tchip num">numeric</span></td><td></td><td class="col-desc">Valor da Subtransação</td><td class="col-ex">6400.0</td></tr>
+<tr><td class="col-name">codigo_categoria_despesa_subtransacao_gestao_financeira</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa da Subtransação</td><td class="col-ex">0</td></tr>
+<tr><td class="col-name">id_lancamento_gestao_financeira</td><td><span class="tchip num">int8</span></td><td><span class="flag fk">FK→gestao_financeira_lancamentos</span></td><td class="col-desc">Identificador Único do Lançamento</td><td class="col-ex">497512</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-gestao_financeira_lancamentos_categorias_despesa_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>gestao_financeira_lancamentos_categorias_despesa_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Categorias de Despesa dos Lançamentos da Gestão Financeira FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">10 colunas</span>
+<span class="pill emb">sem endpoint próprio</span>
+<span class="pill">API: embutida em /gestao-financeira-lancamentos</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ gestao_financeira_lancamentos_faf</b> por id_lancamento_gestao_financeira</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_lancamento_gestao_financeira</td><td><span class="tchip num">int8</span></td><td><span class="flag">NOT NULL</span> <span class="flag fk">FK→gestao_financeira_lancamentos</span></td><td class="col-desc">Identificador Único do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">depth_lancamento</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Nível Hierárquico da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_categoria_lancamento</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_lancamento1</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 1º Nível da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_lancamento2</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 2º Nível da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_lancamento3</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 3º Nível da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_lancamento_pai</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Categoria de Despesa Pai do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">caminho_categoria_lancamento</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Caminho Hierárquico da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_categoria_lancamento_pai</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa Pai do Lançamento</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_lancamento</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Categoria de Despesa do Lançamento</td><td class="col-ex">—</td></tr>
+</tbody></table></div></section>
+<section class="card" id="c-gestao_financeira_subtransacoes_categorias_despesa_faf" data-eixo="financeiro" style="--ec:var(--e-financeiro)">
+<div class="card-head">
+<h2>gestao_financeira_subtransacoes_categorias_despesa_faf</h2>
+<div class="desc-oficial">Tabela que armazena as Categorias de Despesa das Subtransações dos Lançamentos da Gestão Financeira FAF</div>
+<div class="meta-row">
+<span class="pill" style="background:var(--accent-fill);color:var(--accent)">Dinheiro</span>
+<span class="pill">10 colunas</span>
+<span class="pill emb">sem endpoint próprio</span>
+<span class="pill">API: embutida em /gestao-financeira-subtransacoes</span>
+</div></div>
+<div class="rels">
+<span class="rel"><b>→ gestao_financeira_subtransacoes_faf</b> por id_subtransacao_gestao_financeira</span>
+</div>
+<div class="colwrap"><table><thead><tr><th>coluna</th><th>tipo</th><th>chave</th><th>descrição oficial da fonte</th><th>exemplo real / domínio</th></tr></thead><tbody>
+<tr><td class="col-name">id_subtransacao_gestao_financeira</td><td><span class="tchip text">varchar</span></td><td><span class="flag">NOT NULL</span> <span class="flag fk">FK→gestao_financeira_subtransacoes</span></td><td class="col-desc">Identificador Único da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">depth_subtransacao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Nível Hierárquico da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_categoria_subtransacao</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_subtransacao1</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 1º Nível da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_subtransacao2</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 2º Nível da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_subtransacao3</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome do 3º Nível da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_subtransacao_pai</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Categoria de Despesa Pai da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">caminho_categoria_subtransacao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Caminho Hierárquico da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">id_categoria_subtransacao_pai</td><td><span class="tchip num">int8</span></td><td></td><td class="col-desc">Código da Categoria de Despesa Pai da Subtransação</td><td class="col-ex">—</td></tr>
+<tr><td class="col-name">nome_categoria_subtransacao</td><td><span class="tchip text">varchar</span></td><td></td><td class="col-desc">Nome da Categoria de Despesa da Subtransação</td><td class="col-ex">—</td></tr>
+</tbody></table></div></section>
+</div>
+
+<script>
+const DADOS = {"nos": [{"id": "programas_faf", "faixa": 0, "eixo": "programa", "remarks": "Tabela que armazena os Programas Fundo a Fundo (FAF)", "endpoint": "/programas", "embutida": false, "ncols": 29, "nregs": 22}, {"id": "programas_beneficiarios_faf", "faixa": 0, "eixo": "programa", "remarks": "Tabela que armazena os Beneficiários de Programas FAF", "endpoint": "/programas-beneficiarios", "embutida": false, "ncols": 14, "nregs": 21}, {"id": "programas_ageis_faf", "faixa": 0, "eixo": "programa", "remarks": "Tabela que armazena os Programas Ágeis FAF", "endpoint": "/programas-gestao-agil", "embutida": false, "ncols": 10, "nregs": 37}, {"id": "programas_acao_orcamentaria_faf", "faixa": 0, "eixo": "programa", "remarks": "Tabela que armazena as Ações Orçamentárias dos Programas FAF", "endpoint": "embutida em /programas", "embutida": true, "ncols": 5, "nregs": null}, {"id": "programas_natureza_despesa_faf", "faixa": 0, "eixo": "programa", "remarks": "Tabela que armazena as Naturezas de Despesa dos Programas FAF", "endpoint": "embutida em /programas", "embutida": true, "ncols": 3, "nregs": null}, {"id": "planos_acao_faf", "faixa": 1, "eixo": "hub", "remarks": "Tabela que armazena os Planos de Ação FAF", "endpoint": "/planos-acao", "embutida": false, "ncols": 51, "nregs": 15}, {"id": "planos_acao_metas_faf", "faixa": 2, "eixo": "pactuado", "remarks": "Tabela que armazena as Metas dos Planos de Ação FAF", "endpoint": "/planos-acao-metas", "embutida": false, "ncols": 8, "nregs": 21}, {"id": "planos_acao_destinacao_recursos_faf", "faixa": 2, "eixo": "pactuado", "remarks": "Tabela que armazena a Destinação de Recursos dos Planos de Ação FAF", "endpoint": "/planos-acao-destinacao-recursos", "embutida": false, "ncols": 6, "nregs": 29}, {"id": "planos_acao_historico_faf", "faixa": 2, "eixo": "analise", "remarks": "Tabela que armazena o Histórico das Situações dos Planos de Ação FAF", "endpoint": "/planos-acao-historico", "embutida": false, "ncols": 6, "nregs": 205}, {"id": "planos_acao_analises_faf", "faixa": 2, "eixo": "analise", "remarks": "Tabela que armazena as Análises dos Planos de Ação FAF", "endpoint": "/planos-acao-analises", "embutida": false, "ncols": 9, "nregs": 76}, {"id": "termos_adesao_faf", "faixa": 2, "eixo": "analise", "remarks": "Tabela que armazena os Termos de Adesão FAF", "endpoint": "/termos-adesao", "embutida": false, "ncols": 10, "nregs": 14}, {"id": "relatorios_gestao_faf", "faixa": 2, "eixo": "prestacao", "remarks": "Tabela que armazena os dados dos Relatórios de Gestão FAF", "endpoint": "/relatorios-gestao", "embutida": false, "ncols": 14, "nregs": 19}, {"id": "planos_acao_dados_bancarios_faf", "faixa": 2, "eixo": "financeiro", "remarks": "Tabela que armazena os Dados Bancários dos Planos de Ação FAF", "endpoint": "/planos-acao-dados-bancarios", "embutida": false, "ncols": 12, "nregs": 25}, {"id": "empenhos_faf", "faixa": 2, "eixo": "financeiro", "remarks": "Tabela que armazena os Dados dos Empenhos FAF", "endpoint": "/empenhos", "embutida": false, "ncols": 30, "nregs": 1}, {"id": "planos_acao_metas_acoes_faf", "faixa": 3, "eixo": "pactuado", "remarks": "Tabela que armazena as Ações das Metas dos Planos de Ação FAF", "endpoint": "/planos-acao-metas-acoes", "embutida": false, "ncols": 8, "nregs": 47}, {"id": "planos_acao_analises_responsaveis_faf", "faixa": 3, "eixo": "analise", "remarks": "Tabela que armazena os Responsáveis pelas Análises dos Planos de Ação FAF", "endpoint": "/planos-acao-analises-responsaveis", "embutida": false, "ncols": 4, "nregs": 92}, {"id": "termos_adesao_historico_faf", "faixa": 3, "eixo": "analise", "remarks": "Tabela que armazena os Históricos dos Termos de Adesão FAF", "endpoint": "/termos-adesao-historico", "embutida": false, "ncols": 5, "nregs": 42}, {"id": "relatorios_gestao_acoes_faf", "faixa": 3, "eixo": "prestacao", "remarks": "Tabela que armazena os dados das Ações dos Relatórios de Gestão FAF", "endpoint": "/relatorios-gestao-acoes", "embutida": false, "ncols": 5, "nregs": 47}, {"id": "relatorios_gestao_analises_faf", "faixa": 3, "eixo": "prestacao", "remarks": "Tabela que armazena os dados das Análises dos Relatórios de Gestão FAF", "endpoint": "/relatorios-gestao-analises", "embutida": false, "ncols": 8, "nregs": 38}, {"id": "gestao_financeira_saldo_conta_faf", "faixa": 3, "eixo": "financeiro", "remarks": "Tabela que armazena os Dados dos Saldos em Conta dos Planos de Ação FAF", "endpoint": "embutida em /planos-acao-dados-bancarios", "embutida": true, "ncols": 4, "nregs": null}, {"id": "gestao_financeira_lancamentos_faf", "faixa": 3, "eixo": "financeiro", "remarks": "Tabela que armazena os Lançamentos da Gestão Financeira FAF", "endpoint": "/gestao-financeira-lancamentos", "embutida": false, "ncols": 33, "nregs": 969}, {"id": "relatorios_gestao_analises_responsaveis_faf", "faixa": 4, "eixo": "prestacao", "remarks": "Tabela que armazena os dados dos Responsáveis pelas Análises dos Relatórios de Gestão FAF", "endpoint": "/relatorios-gestao-analises-responsaveis", "embutida": false, "ncols": 4, "nregs": 38}, {"id": "gestao_financeira_subtransacoes_faf", "faixa": 4, "eixo": "financeiro", "remarks": "Tabela que armazena os dados das Subtransações dos Lançamentos da Gestão Financeira FAF", "endpoint": "/gestao-financeira-subtransacoes", "embutida": false, "ncols": 17, "nregs": 1126}, {"id": "gestao_financeira_lancamentos_categorias_despesa_faf", "faixa": 4, "eixo": "financeiro", "remarks": "Tabela que armazena as Categorias de Despesa dos Lançamentos da Gestão Financeira FAF", "endpoint": "embutida em /gestao-financeira-lancamentos", "embutida": true, "ncols": 10, "nregs": null}, {"id": "gestao_financeira_subtransacoes_categorias_despesa_faf", "faixa": 4, "eixo": "financeiro", "remarks": "Tabela que armazena as Categorias de Despesa das Subtransações dos Lançamentos da Gestão Financeira FAF", "endpoint": "embutida em /gestao-financeira-subtransacoes", "embutida": true, "ncols": 10, "nregs": null}], "arestas": [{"de": "empenhos_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "gestao_financeira_lancamentos_categorias_despesa_faf", "para": "gestao_financeira_lancamentos_faf", "col": "id_lancamento_gestao_financeira", "pcol": "id_lancamento_gestao_financeira", "implied": false}, {"de": "gestao_financeira_lancamentos_faf", "para": "gestao_financeira_saldo_conta_faf", "col": "id_agencia_conta", "pcol": "id_agencia_conta", "implied": true}, {"de": "gestao_financeira_subtransacoes_categorias_despesa_faf", "para": "gestao_financeira_subtransacoes_faf", "col": "id_subtransacao_gestao_financeira", "pcol": "id_subtransacao_gestao_financeira", "implied": false}, {"de": "gestao_financeira_subtransacoes_faf", "para": "gestao_financeira_lancamentos_faf", "col": "id_lancamento_gestao_financeira", "pcol": "id_lancamento_gestao_financeira", "implied": false}, {"de": "planos_acao_analises_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "planos_acao_analises_faf", "para": "planos_acao_historico_faf", "col": "id_historico_plano_acao", "pcol": "id_historico_plano_acao", "implied": false}, {"de": "planos_acao_analises_responsaveis_faf", "para": "planos_acao_analises_faf", "col": "id_analise_plano_acao", "pcol": "id_analise_plano_acao", "implied": false}, {"de": "planos_acao_dados_bancarios_faf", "para": "gestao_financeira_saldo_conta_faf", "col": "id_agencia_conta", "pcol": "id_agencia_conta", "implied": true}, {"de": "planos_acao_dados_bancarios_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "planos_acao_destinacao_recursos_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "planos_acao_faf", "para": "programas_faf", "col": "id_programa", "pcol": "id_programa", "implied": false}, {"de": "planos_acao_historico_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "planos_acao_metas_acoes_faf", "para": "planos_acao_metas_faf", "col": "id_meta_plano_acao", "pcol": "id_meta_plano_acao", "implied": false}, {"de": "planos_acao_metas_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "programas_acao_orcamentaria_faf", "para": "programas_faf", "col": "id_programa", "pcol": "id_programa", "implied": false}, {"de": "programas_ageis_faf", "para": "programas_faf", "col": "id_programa", "pcol": "id_programa", "implied": false}, {"de": "programas_beneficiarios_faf", "para": "programas_faf", "col": "id_programa", "pcol": "id_programa", "implied": false}, {"de": "programas_natureza_despesa_faf", "para": "programas_faf", "col": "id_programa", "pcol": "id_programa", "implied": false}, {"de": "relatorios_gestao_acoes_faf", "para": "relatorios_gestao_faf", "col": "id_relatorio_gestao", "pcol": "id_relatorio_gestao", "implied": false}, {"de": "relatorios_gestao_acoes_faf", "para": "planos_acao_metas_acoes_faf", "col": "id_acao_meta_plano_acao", "pcol": "id_acao_meta_plano_acao", "implied": false}, {"de": "relatorios_gestao_analises_faf", "para": "relatorios_gestao_faf", "col": "id_relatorio_gestao", "pcol": "id_relatorio_gestao", "implied": false}, {"de": "relatorios_gestao_analises_responsaveis_faf", "para": "relatorios_gestao_analises_faf", "col": "id_relatorio_gestao_analise", "pcol": "id_relatorio_gestao_analise", "implied": false}, {"de": "relatorios_gestao_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "termos_adesao_faf", "para": "planos_acao_faf", "col": "id_plano_acao", "pcol": "id_plano_acao", "implied": false}, {"de": "termos_adesao_historico_faf", "para": "termos_adesao_faf", "col": "id_termo_adesao", "pcol": "id_termo_adesao", "implied": false}]};
+const map = document.getElementById('map');
+const svg = document.getElementById('edges');
+
+function desenhar(){
+  svg.innerHTML='';
+  const base = map.getBoundingClientRect();
+  const cor = getComputedStyle(document.documentElement);
+  for(const a of DADOS.arestas){
+    const de = document.getElementById('n-'+a.de), para = document.getElementById('n-'+a.para);
+    if(!de||!para) continue;
+    const d = de.getBoundingClientRect(), p = para.getBoundingClientRect();
+    // liga da borda direita do pai para a borda esquerda da filha (ou o inverso)
+    const paiPrimeiro = p.left < d.left;
+    const x1 = (paiPrimeiro ? p.right : p.left) - base.left;
+    const y1 = p.top + p.height/2 - base.top;
+    const x2 = (paiPrimeiro ? d.left : d.right) - base.left;
+    const y2 = d.top + d.height/2 - base.top;
+    const mx = (x1+x2)/2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', a.implied ? cor.getPropertyValue('--amber') : cor.getPropertyValue('--border'));
+    path.setAttribute('stroke-width', a.implied ? '1.6' : '1.4');
+    if(a.implied) path.setAttribute('stroke-dasharray','5 4');
+    path.dataset.de=a.de; path.dataset.para=a.para;
+    svg.appendChild(path);
+  }
+}
+addEventListener('load',desenhar); addEventListener('resize',desenhar);
+new MutationObserver(desenhar).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// clique no nó -> rola até o card
+document.querySelectorAll('.node').forEach(n=>{
+  n.addEventListener('click',()=>{
+    const c=document.getElementById('c-'+n.dataset.id);
+    document.querySelectorAll('.card.hid').forEach(x=>x.classList.remove('hid'));
+    c.scrollIntoView({behavior:'smooth',block:'start'});
+    c.style.transition='none'; c.style.outline='2px solid var(--accent)';
+    setTimeout(()=>{c.style.transition='outline .6s'; c.style.outline='2px solid transparent';},700);
+  });
+  // realce das arestas ligadas ao nó
+  n.addEventListener('mouseenter',()=>{
+    svg.querySelectorAll('path').forEach(p=>{
+      const lig = p.dataset.de===n.dataset.id||p.dataset.para===n.dataset.id;
+      p.style.opacity = lig?'1':'.18';
+      if(lig) p.setAttribute('stroke-width','2.4');
+    });
+  });
+  n.addEventListener('mouseleave',()=>{
+    svg.querySelectorAll('path').forEach(p=>{p.style.opacity='1';
+      p.setAttribute('stroke-width', p.getAttribute('stroke-dasharray')?'1.6':'1.4');});
+  });
+});
+
+// busca
+const q=document.getElementById('q');
+let eixoAtivo='*';
+function aplicar(){
+  const termo=q.value.trim().toLowerCase();
+  const ids=new Set();
+  document.querySelectorAll('.card').forEach(c=>{
+    const okEixo = eixoAtivo==='*'||c.dataset.eixo===eixoAtivo;
+    const okTermo = !termo||c.textContent.toLowerCase().includes(termo);
+    const mostra = okEixo&&okTermo;
+    c.classList.toggle('hid',!mostra);
+    if(mostra) ids.add(c.id.slice(2));
+  });
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('off',!ids.has(n.dataset.id)));
+}
+q.addEventListener('input',aplicar);
+document.querySelectorAll('.btn[data-eixo]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.btn[data-eixo]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); eixoAtivo=b.dataset.eixo; aplicar();
+  });
+});
+</script>
+</div></body></html>
