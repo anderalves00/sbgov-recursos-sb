@@ -1,0 +1,2265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Conteudo interno publicado em site publico por decisao do usuario (02/09/2026):
+     fora de buscador, acessivel a quem tem o link. So o meta abaixo tira da indexacao;
+     um Disallow no robots.txt seria pior, porque impede o buscador de ler este noindex. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Fluxo Interativo de Gestão de Recursos — v0.7</title>
+<style>
+:root {
+  --ink:#14213d; --muted:#65758b; --line:#dbe3ec; --surface:#fff; --bg:#f5f7fa;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:clamp(16px,2.4vw,28px) clamp(14px,2.6vw,34px) 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:clamp(19px,2.6vw,25px);text-wrap:balance} header p{margin:7px 0 0;color:var(--muted);font-size:clamp(13px,1.4vw,14px)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+button{border:1px solid #ccd6e0;background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:600;color:#334155}
+button.active{background:#14213d;color:white;border-color:#14213d}
+button:focus-visible{outline:2px solid #1756A9;outline-offset:2px}
+summary:focus-visible{outline:2px solid #1756A9;outline-offset:-2px}
+main{width:100%;max-width:2400px;margin:auto;padding:clamp(12px,2.2vw,28px)}
+.model-note{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.model-note strong{color:#0f4c81}
+.top-flow{display:flex;align-items:stretch;gap:8px;overflow-x:auto;margin-bottom:24px;padding:5px}
+.top-status{flex:1 1 210px;min-width:min(210px,74vw);padding:13px 14px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--c);border-radius:12px;box-shadow:0 2px 10px #0f172a0c}
+.top-status b{display:block;font-size:14px} .top-status small{display:block;margin-top:5px;color:var(--muted)}
+.top-arrow{display:flex;align-items:center;color:#7d8fa3;font-size:24px}
+.status-panel{background:white;border:1px solid var(--line);border-radius:16px;margin:0 0 0;overflow:hidden;box-shadow:0 3px 16px #0f172a0b}
+.status-summary{list-style:none;display:grid;grid-template-columns:48px 1fr 24px;gap:12px;align-items:center;padding:16px 20px;border-left:8px solid var(--status-color);cursor:pointer;background:linear-gradient(90deg,var(--status-light),#fff 34%)}
+.status-summary::-webkit-details-marker{display:none}
+.status-num{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--status-color);color:#fff;font-weight:800}
+.status-summary b{font-size:19px} .status-summary small{display:block;color:var(--muted);margin-top:4px}
+.chev{font-size:20px;color:var(--muted)}
+.status-content{padding:18px 20px 24px}
+.lane{display:grid;grid-template-columns:minmax(160px,1fr) 28px minmax(190px,1.25fr) 28px minmax(170px,1fr) 28px minmax(170px,1fr);align-items:stretch;gap:0}
+.node{border-radius:13px;padding:13px 14px;border:1px solid var(--status-mid);background:#fff;min-height:88px;display:flex;flex-direction:column;justify-content:center}
+.node span{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--status-color);margin-bottom:7px}
+.node b{font-size:18px} .node small{margin-top:5px;color:var(--muted)}
+.node.work{background:var(--status-light)} .node.mark{border:2px solid var(--status-color)}
+.node.decision{background:#fff8dc;border:1px solid #d8aa22;clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%)}
+.arrow{display:grid;place-items:center;font-size:24px;color:var(--status-color);font-weight:900}
+.role-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.role-strip>div{border:1px solid var(--status-mid);background:var(--status-light);border-radius:11px;padding:11px;font-size:12px}
+.role-strip span{color:var(--muted)}
+.groups{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:13px;align-items:start}
+.task-group{border:1px solid #dce4eb;border-radius:13px;overflow:hidden;background:#fff}
+.group-title{padding:10px 13px;background:var(--status-light);border-bottom:1px solid #dce4eb;font-weight:800;color:var(--status-color)}
+.task-list{padding:6px}
+.task-card{border-bottom:1px dashed #e2e8f0}
+.task-card:last-child{border-bottom:0}
+.task-card summary{list-style:none;display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:start;padding:10px 7px;cursor:pointer}
+.task-card summary::-webkit-details-marker{display:none}
+.task-index{font-size:10px;border-radius:6px;background:#eef2f7;padding:4px;text-align:center;color:#69788a}
+.task-title{font-size:12.5px;line-height:1.32}
+.origin{font-size:9px;padding:4px 6px;border-radius:6px;font-weight:800;color:#374151}
+.task-body{padding:2px 12px 12px 45px;color:#465568;font-size:12px;line-height:1.45}
+.task-body>div{margin-top:6px}
+.task-situations span{display:inline-block;margin:5px 4px 0 0;padding:3px 6px;border-radius:999px;background:#f1f5f9;font-size:10px}
+.decision-detail{margin-top:16px;border-left:4px solid var(--status-color);padding:10px 12px;background:#f8fafc;font-size:12px;line-height:1.55}
+.decision-detail b{margin-left:8px} .decision-detail b:first-child{margin-left:0}
+.transition{height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#617388;position:relative}
+.transition:before{content:"";width:2px;height:18px;background:#9aa9b8;position:absolute;top:0}
+.transition span{font-size:9px;letter-spacing:.1em;font-weight:800} .transition b{font-size:12px;color:#334155;margin-top:3px} .transition i{font-style:normal;font-size:21px;margin-top:0}
+.section-title{margin:32px 0 12px;font-size:20px}
+.definitions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.definition-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.definition-card h4{margin:0 0 6px} .definition-card p{font-size:12.5px;color:#465568;line-height:1.45;margin:0 0 8px} .definition-card small{color:#65758b;line-height:1.4}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+th,td{padding:9px 10px;border-bottom:1px solid #e5eaf0;text-align:left;font-size:12px;vertical-align:top}
+th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:0}
+.prov-legend{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 0}
+.prov-legend span{font-size:10px;padding:5px 7px;border-radius:6px;font-weight:800}
+.footer-note{margin:25px 0 50px;color:#65758b;font-size:11px}
+.hidden-layer{display:none !important}
+/* Nada de largura fixa: o conteudo ocupa a largura disponivel e so muda de forma
+   quando a faixa em que esta deixa de caber. */
+.task-title,.node,.group-title,.definition-card p{overflow-wrap:anywhere}
+.status-summary>span,.task-card summary>span{min-width:0}
+
+@media(max-width:1180px){
+  .lane{display:flex;flex-direction:column;gap:8px}
+  .arrow{transform:rotate(90deg);height:24px}
+  .node{min-height:0}
+  .node.decision{clip-path:none;border-radius:13px}
+}
+@media(max-width:900px){
+  .role-strip{grid-template-columns:1fr}
+  header{position:static}
+  .decision-detail b{display:block;margin-left:0;margin-top:6px}
+}
+@media(max-width:640px){
+  .status-summary{grid-template-columns:38px 1fr 20px;gap:9px;padding:13px 13px}
+  .status-summary b{font-size:17px}
+  .status-num{width:32px;height:32px;font-size:13px}
+  .status-content{padding:14px 12px 18px}
+  .task-body{padding:2px 4px 12px 12px}
+  .task-card summary{grid-template-columns:26px 1fr;gap:7px}
+  .origin{grid-column:2;justify-self:start;margin-top:5px}
+  th,td{padding:8px}
+}
+@media print{
+ header{position:static} .toolbar{display:none} body{background:white} main{max-width:none}
+ .status-panel{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Fluxo Interativo de Gestão de Recursos — v0.7</h1>
+  <p>Status 1 a 4 consolidados para revisão visual. O HTML prioriza continuidade, expansão de camadas e leitura de cada tarefa.</p>
+  <div class="toolbar">
+    <button id="btnTasks" class="active" onclick="toggleLayer('task',this)">Tarefas</button>
+    <button id="btnSit" class="active" onclick="toggleLayer('situation',this)">Situações</button>
+    <button id="btnDec" class="active" onclick="toggleLayer('decision',this)">Decisões</button>
+    <button id="btnOrig" class="active" onclick="toggleLayer('origin',this)">Origem</button>
+    <button onclick="setAll(true)">Expandir tudo</button>
+    <button onclick="setAll(false)">Recolher tudo</button>
+  </div>
+</header>
+<main>
+  <div class="model-note">
+    <strong>Correção do desenho anterior:</strong> o Status possui tarefas. O que apareceu anteriormente como “Etapas / tarefas” era uma compactação visual inadequada.
+    Neste modelo, <b>Grupo/Etapa</b> apenas organiza; <b>Tarefa</b> é a unidade de trabalho que recebe situação, responsável, datas, evidências e dependências.
+  </div>
+
+  <div class="top-flow">
+    <div class="top-status" style="--c:#5F6B78"><b>1 — Em Análise</b><small>Decidir se o recurso possui condições para prosseguir ao cadastramento.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#1756A9"><b>2 — Em Cadastro</b><small>Constituir e validar o cadastro estruturado do recurso.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#493A8F"><b>3 — Em Formalização</b><small>Executar, entregar e validar as providências necessárias à formalização.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#B66B00"><b>4 — Pré-Execução</b><small>Preparar as condições técnicas, documentais, financeiras e administrativas para iniciar a execução administrativa.</small></div>
+  </div>
+
+  
+    <details class="status-panel" open style="--status-color:#5F6B78;--status-light:#EEF1F4;--status-mid:#CBD2D9">
+      <summary class="status-summary">
+        <span class="status-num">1</span>
+        <span><b>Em Análise</b><small>Decidir se o recurso possui condições para prosseguir ao cadastramento.</small></span>
+        <span class="chev">⌄</span>
+      </summary>
+      <div class="status-content">
+        <div class="lane">
+          <div class="node entry"><span>ENTRADA</span>Oportunidade selecionada e individualizada para acompanhamento como recurso.</div>
+          <div class="arrow">→</div>
+          <div class="node work"><span>TRABALHO DO STATUS</span>
+            <b>24 tarefas</b>
+            <small>Organizadas em grupos funcionais. Clique nas tarefas para ver definição.</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node decision layer-decision"><span>DECISÃO</span>As condições necessárias para prosseguir foram atendidas?</div>
+          <div class="arrow">→</div>
+          <div class="node mark"><span>MARCO DE SAÍDA</span>Aprovado para cadastramento</div>
+        </div>
+        
+        <div class="groups layer-task">
+          
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Enquadramento</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Analisar objetivos e critérios aplicáveis ao recurso.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar  objetivos e critérios aplicáveis ao recurso com base nas informações disponíveis, identificando aderência, pendências, riscos e condições que possam afetar o prosseguimento do recurso.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Confirmar elegibilidade e requisitos para prosseguimento.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que elegibilidade e requisitos para prosseguimento está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Verificar compatibilidade do objeto pretendido.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar compatibilidade do objeto pretendido, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Identificar restrições, condicionantes e requisitos relevantes.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  restrições, condicionantes e requisitos relevantes, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Análise técnica</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Avaliar a viabilidade técnica do objeto.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar a viabilidade técnica do objeto e produzir uma conclusão operacional sobre suficiência, viabilidade, necessidade de ajuste ou condição para prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Identificar requisitos técnicos relevantes.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  requisitos técnicos relevantes, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Verificar necessidade de estudos ou documentos técnicos para fases seguintes.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar necessidade de estudos ou documentos técnicos para fases seguintes, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Avaliar capacidade de execução e eventuais condicionantes técnicas.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar capacidade de execução e eventuais condicionantes técnicas e produzir uma conclusão operacional sobre suficiência, viabilidade, necessidade de ajuste ou condição para prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Análise financeira</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Verificar o valor disponível ou estimado para o recurso.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar o valor disponível ou estimado para o recurso, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Estimar o valor necessário ao objeto, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estabelecer uma estimativa fundamentada para o valor necessário ao objeto, quando aplicável, suficiente para apoiar a análise e o planejamento da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Avaliar compatibilidade entre objeto e disponibilidade financeira.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar compatibilidade entre objeto e disponibilidade financeira e produzir uma conclusão operacional sobre suficiência, viabilidade, necessidade de ajuste ou condição para prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Identificar necessidade e viabilidade de contrapartida.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  necessidade e viabilidade de contrapartida, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Identificar outras obrigações financeiras relevantes.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  outras obrigações financeiras relevantes, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Análise administrativa / institucional</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Identificar a Secretaria Gestora e a área técnica responsável.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  a secretaria gestora e a área técnica responsável, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Verificar capacidade operacional para condução do recurso.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar capacidade operacional para condução do recurso, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Identificar responsabilidades iniciais.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  responsabilidades iniciais, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Avaliar necessidade de articulação entre áreas ou Secretarias.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar necessidade de articulação entre áreas ou secretarias e produzir uma conclusão operacional sobre suficiência, viabilidade, necessidade de ajuste ou condição para prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Análise jurídica — quando aplicável</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Verificar impedimentos ou restrições jurídicas relevantes.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar impedimentos ou restrições jurídicas relevantes, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Identificar requisitos legais que condicionem o prosseguimento.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  requisitos legais que condicionem o prosseguimento, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Avaliar necessidade de manifestação jurídica formal.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar necessidade de manifestação jurídica formal e produzir uma conclusão operacional sobre suficiência, viabilidade, necessidade de ajuste ou condição para prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#5F6B78;--status-light:#EEF1F4">
+          <div class="group-title">Levantamento preliminar de documentação</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Identificar documentos institucionais necessários.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  documentos institucionais necessários, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Identificar documentos técnicos previstos para fases posteriores.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  documentos técnicos previstos para fases posteriores, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Identificar declarações e informações financeiras necessárias.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  declarações e informações financeiras necessárias, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Mapear pendências documentais que possam impedir o cadastramento.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Executar a atividade “Mapear pendências documentais que possam impedir o cadastramento” de forma rastreável, registrando responsável, datas, situação, evidências e eventual dependência necessária à sua conclusão.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        </div>
+        <div class="decision-detail layer-decision">
+          <b>Se SIM:</b> registra o Marco <strong>Aprovado para cadastramento</strong> e segue para <strong>Em Cadastro</strong>.
+          <b>Se NÃO:</b> permanece no Status com tarefa <strong>Aguardando</strong> ou <strong>Em ajuste</strong> quando a pendência for corrigível; utiliza Fuga de Fluxo apenas quando houver exceção real.
+        </div>
+      </div>
+    </details>
+    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Aprovado para cadastramento</b><i>↓</i></div>
+    
+    <details class="status-panel" open style="--status-color:#1756A9;--status-light:#EAF2FF;--status-mid:#B9D3F4">
+      <summary class="status-summary">
+        <span class="status-num">2</span>
+        <span><b>Em Cadastro</b><small>Constituir e validar o cadastro estruturado do recurso.</small></span>
+        <span class="chev">⌄</span>
+      </summary>
+      <div class="status-content">
+        <div class="lane">
+          <div class="node entry"><span>ENTRADA</span>Marco: Aprovado para cadastramento.</div>
+          <div class="arrow">→</div>
+          <div class="node work"><span>TRABALHO DO STATUS</span>
+            <b>30 tarefas</b>
+            <small>Organizadas em grupos funcionais. Clique nas tarefas para ver definição.</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node decision layer-decision"><span>DECISÃO</span>O cadastro está suficientemente completo e validado?</div>
+          <div class="arrow">→</div>
+          <div class="node mark"><span>MARCO DE SAÍDA</span>Encaminhado para formalização</div>
+        </div>
+        
+        <div class="groups layer-task">
+          
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Identificação e integração de dados</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Obter ou atualizar dados do recurso por API, quando disponível.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Capturar, receber ou atualizar dados do recurso por api, quando disponível a partir da fonte aplicável, preservando a referência de origem e a data da informação.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Realizar download ou importação de dados de plataformas externas.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Trazer os dados da fonte indicada para o cadastro do recurso, preservando a origem e permitindo conferência e rastreabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Importar informações provenientes de planilhas ou controles internos.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Trazer os dados da fonte indicada para o cadastro do recurso, preservando a origem e permitindo conferência e rastreabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Registrar informações recebidas por documentos, arquivos ou inserção manual.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  informações recebidas por documentos, arquivos ou inserção manual no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Consolidar identificadores e referências necessárias ao acompanhamento do recurso.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Reunir, conferir e organizar identificadores e referências necessárias ao acompanhamento do recurso em uma visão única, eliminando lacunas ou divergências que prejudiquem o acompanhamento.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Dados do objeto</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Registrar ou complementar o objeto conforme os dados disponíveis.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  ou complementar o objeto conforme os dados disponíveis no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Registrar justificativa e caracterização do interesse público conforme os dados disponíveis.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  justificativa e caracterização do interesse público conforme os dados disponíveis no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Registrar objetivos e público beneficiado, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  objetivos e público beneficiado, quando aplicável no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Complementar informações descritivas necessárias ao cadastro.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Acrescentar  informações descritivas necessárias ao cadastro que esteja ausente ou insuficiente, permitindo concluir a tarefa ou remover a pendência.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Metas e planejamento</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Registrar metas e etapas previstas conforme a fonte do recurso.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  metas e etapas previstas conforme a fonte do recurso no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Registrar cronograma físico, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  cronograma físico, quando aplicável no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Registrar cronograma de desembolso, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  cronograma de desembolso, quando aplicável no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Registrar plano de aplicação ou estrutura equivalente, quando exigido.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  plano de aplicação ou estrutura equivalente, quando exigido no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Dados financeiros</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Registrar o valor global informado para o recurso.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  o valor global informado para o recurso no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Registrar o valor de repasse informado para o recurso.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  o valor de repasse informado para o recurso no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Registrar a contrapartida municipal informada, quando exigida.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  a contrapartida municipal informada, quando exigida no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Registrar informações bancárias, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  informações bancárias, quando aplicável no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Conferir consistência entre valores e demais informações financeiras.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Comparar e verificar consistência entre valores e demais informações financeiras com as informações e critérios aplicáveis, identificando divergências antes da validação.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Documentação e evidências</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Inserir declarações exigidas.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Anexar ou registrar  declarações exigidas no recurso, garantindo vínculo, identificação e rastreabilidade do conteúdo.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Inserir documentos institucionais.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Anexar ou registrar  documentos institucionais no recurso, garantindo vínculo, identificação e rastreabilidade do conteúdo.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Inserir documentos técnicos disponíveis e exigíveis nesta fase.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Anexar ou registrar  documentos técnicos disponíveis e exigíveis nesta fase no recurso, garantindo vínculo, identificação e rastreabilidade do conteúdo.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Relacionar documentos ao recurso de forma rastreável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Associar  documentos ao recurso de forma rastreável ao recurso de forma explícita, permitindo localizar a evidência e compreender a que etapa ou obrigação ela se refere.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Identificar pendências documentais necessárias à conclusão do cadastro.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  pendências documentais necessárias à conclusão do cadastro, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Validação do cadastro</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Revisar informações cadastradas.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Reexaminar  informações cadastradas para verificar consistência, atualidade e aderência às condições necessárias antes do prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Validar consistência entre objeto, metas, valores, cronogramas e documentos.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Confirmar formalmente que consistência entre objeto, metas, valores, cronogramas e documentos atende aos critérios definidos para a fase; se houver inconsistência, devolver ou encaminhar para ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Corrigir ou complementar dados identificados como inconsistentes.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Modificar ou complementar dados identificados como inconsistentes para eliminar inconsistências, atender orientação ou adequar o conteúdo às condições exigidas.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Confirmar o atendimento dos requisitos de cadastro aplicáveis ao recurso.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que o atendimento dos requisitos de cadastro aplicáveis ao recurso está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#1756A9;--status-light:#EAF2FF">
+          <div class="group-title">Fechamento do cadastro</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Confirmar que o cadastro estruturado está suficientemente completo e validado para seguir à formalização.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que que o cadastro estruturado está suficientemente completo e validado para seguir à formalização está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Registrar o Marco “Cadastro concluído”.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  o marco “cadastro concluído” no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Disponibilizar os dados, documentos e referências estruturados para a etapa seguinte.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Tornar r os dados, documentos e referências estruturados para a etapa seguinte acessível ao responsável pela etapa seguinte, preservando integridade, referência e rastreabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        </div>
+        <div class="decision-detail layer-decision">
+          <b>Se SIM:</b> registra o Marco <strong>Encaminhado para formalização</strong> e segue para <strong>Em Formalização</strong>.
+          <b>Se NÃO:</b> permanece no Status com tarefa <strong>Aguardando</strong> ou <strong>Em ajuste</strong> quando a pendência for corrigível; utiliza Fuga de Fluxo apenas quando houver exceção real.
+        </div>
+      </div>
+    </details>
+    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Encaminhado para formalização</b><i>↓</i></div>
+    
+    <details class="status-panel" open style="--status-color:#493A8F;--status-light:#F0EDFA;--status-mid:#CEC6EB">
+      <summary class="status-summary">
+        <span class="status-num">3</span>
+        <span><b>Em Formalização</b><small>Executar, entregar e validar as providências necessárias à formalização.</small></span>
+        <span class="chev">⌄</span>
+      </summary>
+      <div class="status-content">
+        <div class="lane">
+          <div class="node entry"><span>ENTRADA</span>Marco: Encaminhado para formalização.</div>
+          <div class="arrow">→</div>
+          <div class="node work"><span>TRABALHO DO STATUS</span>
+            <b>30 tarefas</b>
+            <small>Organizadas em grupos funcionais. Clique nas tarefas para ver definição.</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node decision layer-decision"><span>DECISÃO</span>A entrega da Secretaria Gestora foi validada pela Secretaria de Acompanhamento?</div>
+          <div class="arrow">→</div>
+          <div class="node mark"><span>MARCO DE SAÍDA</span>Formalização validada</div>
+        </div>
+        
+        <div class="role-strip layer-task">
+          <div><b>Secretaria de Acompanhamento</b><br><span>Solicita → orienta → acompanha → cobra → valida</span></div>
+          <div><b>Secretaria Gestora</b><br><span>Recebe → providencia → articula apoios → executa → entrega</span></div>
+          <div><b>Secretaria de Apoio</b><br><span>Executa providência específica quando acionada; a condução permanece com a Gestora.</span></div>
+        </div>
+        
+        <div class="groups layer-task">
+          
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Encaminhamento e orientação</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Orientar a Secretaria Gestora quanto às providências necessárias.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Transmitir a  a secretaria gestora quanto às providências necessárias as providências, critérios, prazos e referências necessárias para execução correta das atividades sob sua responsabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Disponibilizar os dados, documentos e referências já consolidados no cadastro.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Tornar r os dados, documentos e referências já consolidados no cadastro acessível ao responsável pela etapa seguinte, preservando integridade, referência e rastreabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Definir responsáveis e prazos iniciais, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estabelecer  responsáveis e prazos iniciais, quando aplicável de forma objetiva e registrável, criando referência para execução, responsabilização ou decisão posterior.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Análise e planejamento pela Secretaria Gestora</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Analisar as informações e documentos recebidos.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Examinar  as informações e documentos recebidos com base nas informações disponíveis, identificando aderência, pendências, riscos e condições que possam afetar o prosseguimento do recurso.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Validar objeto, metas, valores, etapas e cronogramas aplicáveis.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Confirmar formalmente que objeto, metas, valores, etapas e cronogramas aplicáveis atende aos critérios definidos para a fase; se houver inconsistência, devolver ou encaminhar para ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Identificar documentos, manifestações e providências adicionais necessários.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  documentos, manifestações e providências adicionais necessários, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Identificar necessidade de atuação de Secretaria de Apoio.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  necessidade de atuação de secretaria de apoio, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Organizar as providências necessárias à formalização.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estruturar  as providências necessárias à formalização em sequência lógica, com responsáveis, dependências e informações suficientes para sua execução e acompanhamento.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Ajustes e complementações</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Adequar informações, valores, metas ou etapas, quando necessário.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Modificar informações, valores, metas ou etapas, quando necessário para eliminar inconsistências, atender orientação ou adequar o conteúdo às condições exigidas.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Complementar documentos e declarações.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Acrescentar  documentos e declarações que esteja ausente ou insuficiente, permitindo concluir a tarefa ou remover a pendência.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Atender solicitações, diligências ou orientações relacionadas à formalização.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Executar as providências necessárias para responder a solicitações, diligências ou orientações relacionadas à formalização, registrando a resposta e as evidências produzidas.</div>
+                <div><strong>Concluída quando:</strong> Quando a demanda acompanhada ou atendida estiver encerrada e não houver providência pendente vinculada à tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Corrigir inconsistências identificadas durante a tramitação.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Modificar inconsistências identificadas durante a tramitação para eliminar inconsistências, atender orientação ou adequar o conteúdo às condições exigidas.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Providências de apoio</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Solicitar licença, parecer, documento técnico ou manifestação a Secretaria de Apoio, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Formalizar o pedido de licença, parecer, documento técnico ou manifestação a secretaria de apoio, quando aplicável, identificando responsável, necessidade, prazo e vínculo com o recurso.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Acompanhar a emissão da providência solicitada.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Monitorar  a emissão da providência solicitada desde o início até a conclusão, registrando prazos, pendências, interações e eventual necessidade de cobrança ou ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a demanda acompanhada ou atendida estiver encerrada e não houver providência pendente vinculada à tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Incorporar o documento ou manifestação ao processo de formalização.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adicionar  o documento ou manifestação ao processo de formalização ao conjunto oficial de informações/evidências do recurso após sua obtenção e conferência.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Formalização jurídica e administrativa</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Providenciar declarações e documentos dos representantes legais, quando exigidos.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  declarações e documentos dos representantes legais, quando exigidos, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Elaborar, receber ou revisar minuta, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Executar a atividade “Elaborar, receber ou revisar minuta, quando aplicável” de forma rastreável, registrando responsável, datas, situação, evidências e eventual dependência necessária à sua conclusão.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Providenciar análise jurídica, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  análise jurídica, quando aplicável, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Realizar ajustes da minuta ou documentação de celebração.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Executar a atividade “Realizar ajustes da minuta ou documentação de celebração” de forma rastreável, registrando responsável, datas, situação, evidências e eventual dependência necessária à sua conclusão.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Providenciar assinaturas necessárias.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  assinaturas necessárias, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">06</span>
+                <span class="task-title">Providenciar publicação, registro ou vinculação em sistemas, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  publicação, registro ou vinculação em sistemas, quando aplicável, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">07</span>
+                <span class="task-title">Registrar ou vincular conta específica, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  ou vincular conta específica, quando aplicável no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Entrega pela Secretaria Gestora</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Consolidar as evidências de que as providências de formalização foram concluídas.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Reunir, conferir e organizar as evidências de que as providências de formalização foram concluídas em uma visão única, eliminando lacunas ou divergências que prejudiquem o acompanhamento.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Informar formalmente a conclusão à Secretaria de Acompanhamento.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Comunicar formalmente  formalmente a conclusão à secretaria de acompanhamento, registrando a data, o destinatário e a evidência da comunicação.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Disponibilizar documentos e registros necessários à validação.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Tornar r documentos e registros necessários à validação acessível ao responsável pela etapa seguinte, preservando integridade, referência e rastreabilidade.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#493A8F;--status-light:#F0EDFA">
+          <div class="group-title">Validação pela Secretaria de Acompanhamento</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Conferir a entrega realizada pela Secretaria Gestora.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Comparar e verificar a entrega realizada pela secretaria gestora com as informações e critérios aplicáveis, identificando divergências antes da validação.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Validar documentos, registros e providências concluídas.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Confirmar formalmente que documentos, registros e providências concluídas atende aos critérios definidos para a fase; se houver inconsistência, devolver ou encaminhar para ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a análise estiver registrada, com conclusão clara e sem pendência não tratada sob responsabilidade da tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Devolver para ajuste quando houver pendência ou inconsistência.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Retornar para ajuste quando houver pendência ou inconsistência ao responsável pela execução quando houver pendência ou inconsistência, registrando de forma objetiva o que deve ser corrigido.</div>
+                <div><strong>Concluída quando:</strong> Quando a decisão/encaminhamento estiver formalmente registrado e comunicado ao responsável seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Registrar a validação final quando os requisitos estiverem atendidos.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  a validação final quando os requisitos estiverem atendidos no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Autorizar a mudança para o Status seguinte.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Registrar a decisão que permite a mudança para o status seguinte, depois de confirmados os critérios e evidências necessários.</div>
+                <div><strong>Concluída quando:</strong> Quando a decisão/encaminhamento estiver formalmente registrado e comunicado ao responsável seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        </div>
+        <div class="decision-detail layer-decision">
+          <b>Se SIM:</b> registra o Marco <strong>Formalização validada</strong> e segue para <strong>Pré-Execução</strong>.
+          <b>Se NÃO:</b> permanece no Status com tarefa <strong>Aguardando</strong> ou <strong>Em ajuste</strong> quando a pendência for corrigível; utiliza Fuga de Fluxo apenas quando houver exceção real.
+        </div>
+      </div>
+    </details>
+    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Formalização validada</b><i>↓</i></div>
+    
+    <details class="status-panel" open style="--status-color:#B66B00;--status-light:#FFF4E3;--status-mid:#F2CF9B">
+      <summary class="status-summary">
+        <span class="status-num">4</span>
+        <span><b>Pré-Execução</b><small>Preparar as condições técnicas, documentais, financeiras e administrativas para iniciar a execução administrativa.</small></span>
+        <span class="chev">⌄</span>
+      </summary>
+      <div class="status-content">
+        <div class="lane">
+          <div class="node entry"><span>ENTRADA</span>Marco: Formalização validada.</div>
+          <div class="arrow">→</div>
+          <div class="node work"><span>TRABALHO DO STATUS</span>
+            <b>28 tarefas</b>
+            <small>Organizadas em grupos funcionais. Clique nas tarefas para ver definição.</small>
+          </div>
+          <div class="arrow">→</div>
+          <div class="node decision layer-decision"><span>DECISÃO</span>As condições preparatórias obrigatórias foram atendidas?</div>
+          <div class="arrow">→</div>
+          <div class="node mark"><span>MARCO DE SAÍDA</span>Início da Execução Administrativa</div>
+        </div>
+        
+        <div class="groups layer-task">
+          
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Planejamento da execução</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Definir a estratégia de execução do objeto.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estabelecer  a estratégia de execução do objeto de forma objetiva e registrável, criando referência para execução, responsabilização ou decisão posterior.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Revisar metas, etapas e condições relevantes para a execução.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Reexaminar  metas, etapas e condições relevantes para a execução para verificar consistência, atualidade e aderência às condições necessárias antes do prosseguimento.</div>
+                <div><strong>Concluída quando:</strong> Quando o resultado esperado da tarefa estiver produzido, registrado e sem pendência sob sua responsabilidade.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Identificar condicionantes técnicos, administrativos ou financeiros que devam ser resolvidos antes do início administrativo.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  condicionantes técnicos, administrativos ou financeiros que devam ser resolvidos antes do início administrativo, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Definir a sequência das providências preparatórias.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estabelecer  a sequência das providências preparatórias de forma objetiva e registrável, criando referência para execução, responsabilização ou decisão posterior.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Preparação técnica e documental — quando aplicável</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Identificar a documentação técnica exigida antes do início da execução administrativa.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  a documentação técnica exigida antes do início da execução administrativa, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Elaborar ou complementar Projeto Básico.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Produzir ou complementar projeto básico com o nível de conteúdo e forma exigidos para a fase, submetendo-o a revisão ou validação quando aplicável.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Elaborar ou complementar Projeto Executivo.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Produzir ou complementar projeto executivo com o nível de conteúdo e forma exigidos para a fase, submetendo-o a revisão ou validação quando aplicável.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Elaborar ou complementar Termo de Referência.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Produzir ou complementar termo de referência com o nível de conteúdo e forma exigidos para a fase, submetendo-o a revisão ou validação quando aplicável.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Providenciar estudos técnicos, memoriais descritivos e especificações.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  estudos técnicos, memoriais descritivos e especificações, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">06</span>
+                <span class="task-title">Providenciar planilhas orçamentárias, memórias de cálculo e cronogramas.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  planilhas orçamentárias, memórias de cálculo e cronogramas, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">07</span>
+                <span class="task-title">Providenciar ART/RRT, documentos ambientais, levantamentos e projetos complementares.</span>
+                <span class="origin layer-origin" style="background:#FCE4D6">EXT</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adotar as ações necessárias para obter ou produzir  art/rrt, documentos ambientais, levantamentos e projetos complementares, acompanhando a demanda até que o item esteja disponível e registrado.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">08</span>
+                <span class="task-title">Acompanhar análise ou aprovação da documentação técnica, quando exigida.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Monitorar  análise ou aprovação da documentação técnica, quando exigida desde o início até a conclusão, registrando prazos, pendências, interações e eventual necessidade de cobrança ou ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a demanda acompanhada ou atendida estiver encerrada e não houver providência pendente vinculada à tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Providências de Secretaria de Apoio</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Solicitar licença, parecer, documento técnico, manifestação ou providência específica à Secretaria de Apoio.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Formalizar o pedido de licença, parecer, documento técnico, manifestação ou providência específica à secretaria de apoio, identificando responsável, necessidade, prazo e vínculo com o recurso.</div>
+                <div><strong>Concluída quando:</strong> Quando a comunicação estiver realizada e houver evidência suficiente de envio/recebimento.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Acompanhar a emissão da providência solicitada, mantendo a responsabilidade de condução com a Secretaria Gestora.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Monitorar  a emissão da providência solicitada, mantendo a responsabilidade de condução com a secretaria gestora desde o início até a conclusão, registrando prazos, pendências, interações e eventual necessidade de cobrança ou ajuste.</div>
+                <div><strong>Concluída quando:</strong> Quando a demanda acompanhada ou atendida estiver encerrada e não houver providência pendente vinculada à tarefa.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Incorporar a evidência produzida pela Secretaria de Apoio ao recurso.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Adicionar  a evidência produzida pela secretaria de apoio ao recurso ao conjunto oficial de informações/evidências do recurso após sua obtenção e conferência.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Preparação financeira</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Confirmar a disponibilidade ou liberação do recurso, quando necessária.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que a disponibilidade ou liberação do recurso, quando necessária está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Confirmar condições de contrapartida, quando aplicável.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que condições de contrapartida, quando aplicável está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Verificar disponibilidade orçamentária ou condição financeira municipal necessária ao início.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar disponibilidade orçamentária ou condição financeira municipal necessária ao início, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Identificar e tratar ajustes financeiros que bloqueiem o início da execução administrativa.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  e tratar ajustes financeiros que bloqueiem o início da execução administrativa, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Preparação administrativa</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Definir a forma de contratação ou procedimento administrativo aplicável.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estabelecer  a forma de contratação ou procedimento administrativo aplicável de forma objetiva e registrável, criando referência para execução, responsabilização ou decisão posterior.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Identificar responsáveis pela condução administrativa do procedimento.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Levantar e registrar  responsáveis pela condução administrativa do procedimento, de forma que a informação possa orientar as tarefas seguintes e a tomada de decisão.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Organizar a documentação necessária para abertura do processo administrativo.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Estruturar  a documentação necessária para abertura do processo administrativo em sequência lógica, com responsáveis, dependências e informações suficientes para sua execução e acompanhamento.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">04</span>
+                <span class="task-title">Preparar o encaminhamento à área responsável pela contratação/licitação ou procedimento equivalente.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Organizar previamente  o encaminhamento à área responsável pela contratação/licitação ou procedimento equivalente, deixando os elementos necessários prontos para o início da atividade seguinte.</div>
+                <div><strong>Concluída quando:</strong> Quando o produto ou ajuste estiver finalizado, registrado e apto à validação ou uso na etapa seguinte.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">05</span>
+                <span class="task-title">Verificar autorizações necessárias ao início administrativo.</span>
+                <span class="origin layer-origin" style="background:#D7E8FF">BASE</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Checar autorizações necessárias ao início administrativo, registrar o resultado e identificar eventual pendência, restrição ou condição que exija tratamento.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">06</span>
+                <span class="task-title">Confirmar que não existem pendências bloqueantes para a abertura do procedimento.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que que não existem pendências bloqueantes para a abertura do procedimento está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        <div class="task-group" style="--status-color:#B66B00;--status-light:#FFF4E3">
+          <div class="group-title">Fechamento da Pré-Execução</div>
+          <div class="task-list">
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">01</span>
+                <span class="task-title">Confirmar que as condições preparatórias obrigatórias aplicáveis foram atendidas.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Verificar e registrar que que as condições preparatórias obrigatórias aplicáveis foram atendidas está atendido, disponível ou validado no nível necessário para permitir o avanço da fase.</div>
+                <div><strong>Concluída quando:</strong> Quando a informação ou decisão estiver registrada e puder ser utilizada pelas tarefas seguintes.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">02</span>
+                <span class="task-title">Registrar os eventos relevantes ocorridos na fase, quando aplicáveis.</span>
+                <span class="origin layer-origin" style="background:#E2F0D9">EVOL</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  os eventos relevantes ocorridos na fase, quando aplicáveis no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            
+            <details class="task-card layer-task">
+              <summary>
+                <span class="task-index">03</span>
+                <span class="task-title">Registrar o Marco “Início da Execução Administrativa” quando o procedimento administrativo for efetivamente iniciado.</span>
+                <span class="origin layer-origin" style="background:#E4DFEC">HÍBRIDO</span>
+              </summary>
+              <div class="task-body">
+                <div><strong>Definição:</strong> Inserir e manter  o marco “início da execução administrativa” quando o procedimento administrativo for efetivamente iniciado no cadastro do recurso, de forma estruturada, rastreável e disponível para uso nas fases seguintes.</div>
+                <div><strong>Concluída quando:</strong> Quando o dado, documento ou evidência estiver disponível, vinculado ao recurso e conferido no nível necessário.</div>
+                <div class="task-situations layer-situation">
+                  <strong>Situações possíveis:</strong>
+                  <span>Não iniciada</span><span>Em andamento</span><span>Aguardando</span><span>Em ajuste</span><span>Concluída</span><span>Não aplicável*</span><span>Cancelada</span>
+                </div>
+              </div>
+            </details>
+            </div>
+        </div>
+        
+        </div>
+        <div class="decision-detail layer-decision">
+          <b>Se SIM:</b> registra o Marco <strong>Início da Execução Administrativa</strong> e segue para <strong>Execução Administrativa</strong>.
+          <b>Se NÃO:</b> permanece no Status com tarefa <strong>Aguardando</strong> ou <strong>Em ajuste</strong> quando a pendência for corrigível; utiliza Fuga de Fluxo apenas quando houver exceção real.
+        </div>
+      </div>
+    </details>
+    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Início da Execução Administrativa</b><i>↓</i></div>
+    
+
+  <h2 class="section-title">Definição das Situações da Tarefa</h2>
+  <div class="definitions">
+<div class="definition-card">
+  <h4>Não iniciada</h4>
+  <p>A tarefa é aplicável ao recurso, mas sua execução ainda não começou.</p>
+  <small><b>Regra:</b> Não possui data de início de execução. Deve permanecer assim até que o responsável efetivamente inicie a atividade.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Em andamento</h4>
+  <p>A execução da tarefa foi iniciada e está sendo realizada normalmente.</p>
+  <small><b>Regra:</b> Deve ter data de início e responsável. Não deve ser usada quando a tarefa estiver bloqueada por dependência; nesse caso, usar Aguardando.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Aguardando</h4>
+  <p>A tarefa não consegue avançar porque depende de informação, documento, órgão, pessoa, autorização ou outra condição externa à execução imediata do responsável.</p>
+  <small><b>Regra:</b> O motivo é obrigatório e deve ser registrada a data de início da espera. Aguardar não é, por si só, uma Fuga de Fluxo.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Em ajuste</h4>
+  <p>A tarefa está sendo corrigida, complementada ou adequada após identificação de inconsistência, devolução ou nova exigência.</p>
+  <small><b>Regra:</b> Preserva o histórico da versão anterior e caracteriza retrabalho/ciclo de correção.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Concluída</h4>
+  <p>O responsável terminou a execução da tarefa e produziu o resultado ou evidência esperada.</p>
+  <small><b>Regra:</b> Concluir uma tarefa não significa necessariamente encerrar o Status; outras tarefas ou validações podem continuar pendentes.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Não aplicável</h4>
+  <p>A tarefa pertence ao catálogo do Status, mas não é exigida para aquele recurso em razão de modalidade, regra, objeto ou condição específica.</p>
+  <small><b>Regra:</b> Deve haver justificativa ou regra de aplicabilidade identificável. Não deve ser usada para esconder uma tarefa pendente.</small>
+</div>
+
+<div class="definition-card">
+  <h4>Cancelada</h4>
+  <p>A tarefa chegou a ser aplicável ou criada, mas deixou de ser necessária antes de sua conclusão.</p>
+  <small><b>Regra:</b> O histórico deve ser preservado, com motivo do cancelamento e data. Não equivale automaticamente ao cancelamento do recurso.</small>
+</div>
+</div>
+
+  <h2 class="section-title">Motivos da Situação “Aguardando”</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Motivo</th><th>Definição operacional</th></tr></thead>
+      <tbody><tr><td><b>Informação</b></td><td>Depende do recebimento ou confirmação de informação necessária.</td></tr><tr><td><b>Documento</b></td><td>Depende de documento ainda não disponível ou não validado.</td></tr><tr><td><b>Secretaria Gestora</b></td><td>Depende de providência sob responsabilidade da Secretaria Gestora.</td></tr><tr><td><b>Secretaria de Apoio</b></td><td>Depende de providência específica de uma Secretaria de Apoio, sem transferência da responsabilidade de condução da Gestora.</td></tr><tr><td><b>Área interna</b></td><td>Depende de área ou unidade interna que não se enquadra como Secretaria Gestora/Apoio.</td></tr><tr><td><b>Concedente</b></td><td>Depende de providência, análise ou manifestação do órgão concedente.</td></tr><tr><td><b>Mandatária</b></td><td>Depende de providência, análise ou manifestação de mandatária.</td></tr><tr><td><b>Fornecedor</b></td><td>Depende de informação, documento, entrega ou providência de fornecedor.</td></tr><tr><td><b>Análise externa</b></td><td>Depende de análise realizada fora da unidade responsável pelo acompanhamento municipal.</td></tr><tr><td><b>Autorização</b></td><td>Depende de autorização formal necessária ao prosseguimento.</td></tr><tr><td><b>Liberação financeira</b></td><td>Depende de disponibilidade, desbloqueio ou liberação de recurso financeiro.</td></tr><tr><td><b>Assinatura</b></td><td>Depende da assinatura de pessoa ou autoridade necessária à conclusão da tarefa.</td></tr></tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">Rastreabilidade da contribuição</h2>
+  <p style="color:#65758b;font-size:12px">O badge de origem aparece em cada tarefa quando a camada “Origem” está habilitada.</p>
+  <div class="prov-legend">
+    <span style="background:#D7E8FF">BASE — já existia no modelo original</span>
+    <span style="background:#FCE4D6">EXT — incorporado do documento recebido</span>
+    <span style="background:#E4DFEC">HÍBRIDO — base existente enriquecida pelo documento</span>
+    <span style="background:#E2F0D9">EVOL — evolução criada durante a revisão</span>
+  </div>
+
+  <div class="footer-note">
+    * “Não aplicável” somente deve ser usado quando uma regra objetiva tornar a tarefa desnecessária para aquele recurso.
+    O HTML é um artefato de exploração/revisão; a documentação formal pode continuar no DOCX.
+  </div>
+</main>
+<script>
+function toggleLayer(name, btn){
+  document.querySelectorAll('.layer-'+name).forEach(el=>el.classList.toggle('hidden-layer'));
+  btn.classList.toggle('active');
+}
+function setAll(open){
+  document.querySelectorAll('details.status-panel, details.task-card').forEach(d=>d.open=open);
+}
+</script>
+</body>
+</html>
