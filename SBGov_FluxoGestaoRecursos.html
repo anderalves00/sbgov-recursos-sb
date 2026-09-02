@@ -22,8 +22,6 @@ button.active{background:#14213d;color:white;border-color:#14213d}
 button:focus-visible{outline:2px solid #1756A9;outline-offset:2px}
 summary:focus-visible{outline:2px solid #1756A9;outline-offset:-2px}
 main{width:100%;max-width:2400px;margin:auto;padding:clamp(12px,2.2vw,28px)}
-.model-note{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:18px}
-.model-note strong{color:#0f4c81}
 .top-flow{display:flex;align-items:stretch;gap:8px;overflow-x:auto;margin-bottom:24px;padding:5px}
 .top-status{flex:1 1 210px;min-width:min(210px,74vw);padding:13px 14px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--c);border-radius:12px;box-shadow:0 2px 10px #0f172a0c}
 .top-status b{display:block;font-size:14px} .top-status small{display:block;margin-top:5px;color:var(--muted)}
@@ -40,7 +38,14 @@ main{width:100%;max-width:2400px;margin:auto;padding:clamp(12px,2.2vw,28px)}
 .node span{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--status-color);margin-bottom:7px}
 .node b{font-size:18px} .node small{margin-top:5px;color:var(--muted)}
 .node.work{background:var(--status-light)} .node.mark{border:2px solid var(--status-color)}
-.node.decision{background:#fff8dc;border:1px solid #d8aa22;clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%)}
+/* Decisao: o clip-path recorta a borda do proprio elemento, e por isso o contorno
+   sumia nas diagonais. O hexagono passa a ser duas camadas — a de tras da a cor da
+   linha, a da frente entra 2px em todos os lados — e o padding lateral abre espaco
+   para o chanfro, que antes comia o inicio do texto. */
+.node.decision{position:relative;isolation:isolate;background:none;border:0;padding:14px calc(8% + 18px)}
+.node.decision::before,.node.decision::after{content:"";position:absolute;z-index:-1;clip-path:polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%)}
+.node.decision::before{inset:0;background:#d8aa22}
+.node.decision::after{inset:2px;background:#fff8dc}
 .arrow{display:grid;place-items:center;font-size:24px;color:var(--status-color);font-weight:900}
 .role-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
 .role-strip>div{border:1px solid var(--status-mid);background:var(--status-light);border-radius:11px;padding:11px;font-size:12px}
@@ -61,9 +66,22 @@ main{width:100%;max-width:2400px;margin:auto;padding:clamp(12px,2.2vw,28px)}
 .task-situations span{display:inline-block;margin:5px 4px 0 0;padding:3px 6px;border-radius:999px;background:#f1f5f9;font-size:10px}
 .decision-detail{margin-top:16px;border-left:4px solid var(--status-color);padding:10px 12px;background:#f8fafc;font-size:12px;line-height:1.55}
 .decision-detail b{margin-left:8px} .decision-detail b:first-child{margin-left:0}
-.transition{height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#617388;position:relative}
-.transition:before{content:"";width:2px;height:18px;background:#9aa9b8;position:absolute;top:0}
-.transition span{font-size:9px;letter-spacing:.1em;font-weight:800} .transition b{font-size:12px;color:#334155;margin-top:3px} .transition i{font-style:normal;font-size:21px;margin-top:0}
+/* Transicao: nao e um acontecimento, e a mudanca de um Status para outro. Por isso
+   mostra o par de origem e destino, nas duas cores, e cita o marco como CAUSA — o
+   desenho anterior exibia so o nome do marco, o que fazia a transicao parecer o
+   proprio evento. */
+.transition{display:grid;justify-items:center;gap:7px;padding:22px 14px 26px;position:relative}
+.transition::before{content:"";position:absolute;top:0;width:2px;height:17px;background:linear-gradient(var(--de),transparent)}
+.transition-rotulo{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#7a8899}
+.transition-par{position:relative;overflow:hidden;display:flex;align-items:center;gap:13px;flex-wrap:wrap;justify-content:center;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 20px 11px;box-shadow:0 2px 10px #0f172a0d}
+.transition-par::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--de),var(--para))}
+.transition-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800}
+.transition-status::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.transition-status.de{color:var(--de)} .transition-status.para{color:var(--para)}
+.transition-seta{font-size:17px;font-weight:900;color:#93a3b5}
+.transition-causa{margin:0;font-size:11px;line-height:1.5;color:#65758b;text-align:center;max-width:62ch}
+.transition-causa b{color:#334155}
+.transition-causa em{font-style:normal;color:#8a94a6}
 .section-title{margin:32px 0 12px;font-size:20px}
 .definitions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px}
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -85,7 +103,9 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
   .lane{display:flex;flex-direction:column;gap:8px}
   .arrow{transform:rotate(90deg);height:24px}
   .node{min-height:0}
-  .node.decision{clip-path:none;border-radius:13px}
+  /* Empilhado o hexagono nao se le: volta a ser caixa, com a mesma cor de decisao. */
+  .node.decision{padding:13px 14px;border:1px solid #d8aa22;background:#fff8dc}
+  .node.decision::before,.node.decision::after{display:none}
 }
 @media(max-width:900px){
   .role-strip{grid-template-columns:1fr}
@@ -122,11 +142,6 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
   </div>
 </header>
 <main>
-  <div class="model-note">
-    <strong>Correção do desenho anterior:</strong> o Status possui tarefas. O que apareceu anteriormente como “Etapas / tarefas” era uma compactação visual inadequada.
-    Neste modelo, <b>Grupo/Etapa</b> apenas organiza; <b>Tarefa</b> é a unidade de trabalho que recebe situação, responsável, datas, evidências e dependências.
-  </div>
-
   <div class="top-flow">
     <div class="top-status" style="--c:#5F6B78"><b>1 — Em Análise</b><small>Decidir se o recurso possui condições para prosseguir ao cadastramento.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#1756A9"><b>2 — Em Cadastro</b><small>Constituir e validar o cadastro estruturado do recurso.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#493A8F"><b>3 — Em Formalização</b><small>Executar, entregar e validar as providências necessárias à formalização.</small></div><div class="top-arrow">→</div><div class="top-status" style="--c:#B66B00"><b>4 — Pré-Execução</b><small>Preparar as condições técnicas, documentais, financeiras e administrativas para iniciar a execução administrativa.</small></div>
   </div>
@@ -575,7 +590,15 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
         </div>
       </div>
     </details>
-    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Aprovado para cadastramento</b><i>↓</i></div>
+    <div class="transition" style="--de:#5F6B78;--para:#1756A9">
+      <span class="transition-rotulo">Transição de Status</span>
+      <div class="transition-par">
+        <span class="transition-status de">Em Análise</span>
+        <span class="transition-seta" aria-hidden="true">→</span>
+        <span class="transition-status para">Em Cadastro</span>
+      </div>
+      <p class="transition-causa">Mudança de Status <b>autorizada pelo marco</b> “Aprovado para cadastramento”.</p>
+    </div>
     
     <details class="status-panel" open style="--status-color:#1756A9;--status-light:#EAF2FF;--status-mid:#B9D3F4">
       <summary class="status-summary">
@@ -1121,7 +1144,15 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
         </div>
       </div>
     </details>
-    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Encaminhado para formalização</b><i>↓</i></div>
+    <div class="transition" style="--de:#1756A9;--para:#493A8F">
+      <span class="transition-rotulo">Transição de Status</span>
+      <div class="transition-par">
+        <span class="transition-status de">Em Cadastro</span>
+        <span class="transition-seta" aria-hidden="true">→</span>
+        <span class="transition-status para">Em Formalização</span>
+      </div>
+      <p class="transition-causa">Mudança de Status <b>autorizada pelo marco</b> “Encaminhado para formalização”.</p>
+    </div>
     
     <details class="status-panel" open style="--status-color:#493A8F;--status-light:#F0EDFA;--status-mid:#CEC6EB">
       <summary class="status-summary">
@@ -1673,7 +1704,15 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
         </div>
       </div>
     </details>
-    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Formalização validada</b><i>↓</i></div>
+    <div class="transition" style="--de:#493A8F;--para:#B66B00">
+      <span class="transition-rotulo">Transição de Status</span>
+      <div class="transition-par">
+        <span class="transition-status de">Em Formalização</span>
+        <span class="transition-seta" aria-hidden="true">→</span>
+        <span class="transition-status para">Pré-Execução</span>
+      </div>
+      <p class="transition-causa">Mudança de Status <b>autorizada pelo marco</b> “Formalização validada”.</p>
+    </div>
     
     <details class="status-panel" open style="--status-color:#B66B00;--status-light:#FFF4E3;--status-mid:#F2CF9B">
       <summary class="status-summary">
@@ -2182,7 +2221,15 @@ th{background:#14213d;color:#fff;font-size:11px} tr:last-child td{border-bottom:
         </div>
       </div>
     </details>
-    <div class="transition"><span>TRANSIÇÃO DE STATUS</span><b>Início da Execução Administrativa</b><i>↓</i></div>
+    <div class="transition" style="--de:#B66B00;--para:#8A94A6">
+      <span class="transition-rotulo">Transição de Status</span>
+      <div class="transition-par">
+        <span class="transition-status de">Pré-Execução</span>
+        <span class="transition-seta" aria-hidden="true">→</span>
+        <span class="transition-status para">Execução Administrativa</span>
+      </div>
+      <p class="transition-causa">Mudança de Status <b>autorizada pelo marco</b> “Início da Execução Administrativa”. <em>— Status 5, ainda não consolidado nesta versão</em></p>
+    </div>
     
 
   <h2 class="section-title">Definição das Situações da Tarefa</h2>
